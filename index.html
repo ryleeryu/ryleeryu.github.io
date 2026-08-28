@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Focus Dial 60 — Chroma Key / Camera</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#FFFFFF}
+  canvas{display:block;width:100vw;height:100vh}
+  video{display:none}
+  #ui{position:fixed;left:0;right:0;bottom:0;padding:15px 22px;display:flex;
+      align-items:center;flex-wrap:wrap;row-gap:10px;
+      font:500 11px/1 -apple-system,"Helvetica Neue",Arial,sans-serif;
+      letter-spacing:1.3px;color:#fff;background:rgba(0,0,0,.55);
+      transition:opacity .4s;user-select:none}
+  #ui.hide{opacity:0;pointer-events:none}
+  #ui .grp{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  #ui .dv{width:1px;height:13px;background:rgba(255,255,255,.22);margin:0 20px;flex:none}
+  #ui .end{margin-left:auto;display:flex;align-items:center;gap:16px}
+  #ui button{background:none;border:none;color:#fff;font:inherit;letter-spacing:1.3px;
+      cursor:pointer;padding:6px 0;white-space:nowrap}
+  #ui button:hover{color:#9ad}
+  #ui button.off{opacity:.35}
+  #ui button.primary{font-weight:700}
+  #help{opacity:.55;font-weight:700;width:20px;text-align:center;padding:6px 0 6px 0!important}
+  #help:hover{opacity:1}
+  #legend{position:absolute;right:0;bottom:calc(100% + 10px);width:280px;
+      background:rgba(20,20,20,.95);border-radius:8px;padding:14px 16px;
+      font:400 12px/1.9 -apple-system,"Helvetica Neue",Arial,sans-serif;
+      letter-spacing:.2px;display:none;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  #legend.show{display:block}
+  #legend b{display:inline-block;width:78px;opacity:.6;font-weight:600}
+  #msg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);max-width:620px;
+      padding:26px 30px;background:rgba(20,20,20,.92);color:#fff;border-radius:10px;
+      font:400 14px/1.7 -apple-system,"Helvetica Neue",Arial,sans-serif;display:none}
+  #msg h3{margin:0 0 12px;font-size:15px;letter-spacing:.5px}
+  #msg code{background:rgba(255,255,255,.14);padding:2px 7px;border-radius:4px;
+      font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #msg .diag{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.2);
+      font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;opacity:.75}
+  #msg button{margin-top:16px;background:#fff;color:#111;border:none;border-radius:5px;
+      padding:8px 16px;font:600 12px/1 inherit;letter-spacing:1px;cursor:pointer}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<video id="v" playsinline muted></video>
+<div id="msg"></div>
+<div id="ui">
+<div class="grp">
+  <button id="run" class="primary">BEGIN</button>
+  <button id="rst">RESET</button>
+</div>
+<div class="dv"></div>
+<div class="grp">
+  <button id="rec">REC &#9675;</button>
+  <button id="sav" class="off">SAVE</button>
+  <button id="clr" class="off">CLEAR</button>
+</div>
+<div class="dv"></div>
+<div class="grp">
+  <button id="cam">CAMERA: OFF</button>
+  <button id="mir" class="off">MIRROR</button>
+  <button id="scr" class="off">SCRIM: SOFT</button>
+</div>
+<div class="dv"></div>
+<div class="grp">
+  <button id="bg">BG: WHITE</button>
+  <button id="cd">COUNTDOWN: ON</button>
+  <button id="fs">FULLSCREEN</button>
+</div>
+<div class="end" style="position:relative">
+  <button id="help">?</button>
+  <div id="legend">
+    <div><b>SPACE</b>재생 / 일시정지</div>
+    <div><b>R</b>처음으로</div>
+    <div><b>T</b>녹화 시작/정지</div>
+    <div><b>E</b>영상으로 저장</div>
+    <div><b>V</b>카메라 켜기/끄기</div>
+    <div><b>N</b>카메라 전환</div>
+    <div><b>M</b>좌우 반전</div>
+    <div><b>S</b>스크림 밝기</div>
+    <div><b>B</b>배경색</div>
+    <div><b>C</b>타이머 표시</div>
+    <div><b>F</b>전체화면</div>
+  </div>
+</div>
+</div>
+<script>
+(function(){
+"use strict";
+
+var DW = 1920, DH = 1080;
+var CX = -269, CY = 540, R = 829;
+var SPAN = 30;
+var ARC = "#DCDCD7";
+var DOT_FAR = [196,196,191], DOT_NEAR = [26,26,24];
+var TXT_FAR = [168,168,162], TXT_NEAR = [26,26,24];
+var FONT = '"Helvetica Neue",Helvetica,Arial,"Segoe UI",sans-serif';
+
+var BGS = [["WHITE","#FFFFFF"],["BLUE","#0047BB"]];
+var SCRIMS = [["SOFT",0.35],["STRONG",0.65],["OFF",0]];
+var bgi = 0, sci = 0;
+
+var q = new URLSearchParams(location.search);
+function num(k, d){ var v = parseFloat(q.get(k)); return isFinite(v) && v > 0 ? v : d; }
+
+var TW = num("tw", 0.8);
+var PEAK = num("peak", 5);
+var DRIFT = num("dr", 0.52) / 60;
+
+var PLAN = [
+  { name:"START!",    dur: num("st", 5),        timer:false },
+  { name:"SESSION 1", dur: num("s1", 25) * 60,  timer:true  },
+  { name:"REST",      dur: num("r1", 5)  * 60,  timer:true  },
+  { name:"SESSION 2", dur: num("s2", 25) * 60,  timer:true  },
+  { name:"REST",      dur: num("r2", 5)  * 60,  timer:true  },
+  { name:"DONE!",     dur: num("en", 5),        timer:false }
+];
+var SEGS = [], acc = 0, i;
+for (i=0;i<PLAN.length;i++){
+  SEGS.push({ s:acc, e:acc+PLAN[i].dur, name:PLAN[i].name, timer:PLAN[i].timer });
+  acc += PLAN[i].dur;
+}
+var N = SEGS.length, TOTAL = acc;
+for (i=0;i<N;i++){
+  SEGS[i].a = SEGS[i].s + (i > 0   ? TW/2 : 0);
+  SEGS[i].b = SEGS[i].e - (i < N-1 ? TW/2 : 0);
+  SEGS[i].drift = DRIFT * (SEGS[i].b - SEGS[i].a);
+}
+
+var ATZ = Math.atan(PEAK);
+function ease(u){ return (Math.atan((u-0.5)*2*PEAK)/ATZ + 1)/2; }
+
+var W = new Array(N);
+function state(t){
+  var i, g;
+  for (i=0;i<N;i++) W[i] = 0;
+  if (t <= 0){ W[0] = 1; return -SEGS[0].drift/2; }
+  if (t >= TOTAL){ W[N-1] = 1; return (N-1)*SPAN + SEGS[N-1].drift/2; }
+  for (i=0;i<N;i++){
+    if (t >= SEGS[i].a && t <= SEGS[i].b){
+      W[i] = 1;
+      var d = SEGS[i].drift;
+      return i*SPAN - d/2 + d*((t-SEGS[i].a)/(SEGS[i].b-SEGS[i].a));
+    }
+  }
+  for (i=0;i<N-1;i++){
+    var c = SEGS[i].e;
+    if (t > c-TW/2 && t < c+TW/2){
+      g = ease((t-(c-TW/2))/TW);
+      W[i] = 1-g; W[i+1] = g;
+      var from = i*SPAN + SEGS[i].drift/2;
+      var to = (i+1)*SPAN - SEGS[i+1].drift/2;
+      return from + (to-from)*g;
+    }
+  }
+  W[0] = 1;
+  return 0;
+}
+
+function rgb(a,b,k){
+  return "rgb("+Math.round(a[0]+(b[0]-a[0])*k)+","+
+                Math.round(a[1]+(b[1]-a[1])*k)+","+
+                Math.round(a[2]+(b[2]-a[2])*k)+")";
+}
+function fmt(v){
+  v = Math.max(0, Math.ceil(v));
+  return Math.floor(v/60)+":"+("0"+(v%60)).slice(-2);
+}
+
+var cv = document.getElementById("c"), ctx = cv.getContext("2d");
+var vid = document.getElementById("v");
+var vw = 0, vh = 0, S = 1, ox = 0, oy = 0;
+
+function resize(){
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  vw = window.innerWidth; vh = window.innerHeight;
+  cv.width = Math.round(vw*dpr); cv.height = Math.round(vh*dpr);
+  S = Math.min(vw/DW, vh/DH);
+  ox = (vw - DW*S)/2; oy = (vh - DH*S)/2;
+}
+window.addEventListener("resize", resize);
+
+function track(text, x, y, tr){
+  for (var i=0;i<text.length;i++){
+    var ch = text[i];
+    ctx.fillText(ch, x, y);
+    x += ctx.measureText(ch).width + tr;
+  }
+}
+
+var t = 0, going = false, last = 0, speed = 1, showCd = true;
+var stream = null, camOn = false, mirror = false, cams = [], camIdx = 0;
+
+function drawCamera(){
+  var sw = vid.videoWidth, sh = vid.videoHeight;
+  if (!sw || !sh) return false;
+  var sc = Math.max(vw/sw, vh/sh);
+  var dw = sw*sc, dh = sh*sc;
+  var dx = (vw-dw)/2, dy = (vh-dh)/2;
+  ctx.save();
+  if (mirror){ ctx.translate(vw, 0); ctx.scale(-1, 1); }
+  ctx.drawImage(vid, dx, dy, dw, dh);
+  ctx.restore();
+  var a = SCRIMS[sci][1];
+  if (a > 0){
+    ctx.fillStyle = "rgba(241,241,239," + a + ")";
+    ctx.fillRect(0, 0, vw, vh);
+  }
+  return true;
+}
+
+function draw(){
+  var dpr = cv.width/vw;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+
+  var painted = false;
+  if (camOn && vid.readyState >= 2) painted = drawCamera();
+  if (!painted){
+    ctx.fillStyle = BGS[bgi][1];
+    ctx.fillRect(0,0,vw,vh);
+  }
+
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.scale(S, S);
+  ctx.beginPath();
+  ctx.rect(0,0,DW,DH);
+  ctx.clip();
+
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, Math.PI*2);
+  ctx.strokeStyle = ARC;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  var A = state(t);
+  ctx.textBaseline = "alphabetic";
+
+  for (var i=0;i<N;i++){
+    var p = A - i*SPAN;
+    var w = W[i];
+    var rad = p*Math.PI/180;
+    var x = CX + R*Math.cos(rad), y = CY + R*Math.sin(rad);
+    if (x < -80 || y < -260 || y > DH+260) continue;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 6 + 12*w, 0, Math.PI*2);
+    ctx.fillStyle = rgb(DOT_FAR, DOT_NEAR, w);
+    ctx.fill();
+
+    var fs = 30 + 48*w;
+    ctx.save();
+    ctx.translate(x + 40 + 26*w, y);
+    ctx.rotate(p*0.5*(1-w)*Math.PI/180);
+    ctx.font = (w > 0.55 ? "700 " : "400 ") + fs.toFixed(1) + "px " + FONT;
+    ctx.fillStyle = rgb(TXT_FAR, TXT_NEAR, w);
+    track(SEGS[i].name, 0, 0, fs*0.035);
+
+    if (showCd && SEGS[i].timer){
+      var op = Math.max(0, Math.min(1, (w-0.55)/0.30));
+      if (op > 0.01){
+        ctx.globalAlpha = op;
+        ctx.font = "400 27px " + FONT;
+        ctx.fillStyle = "#8E8E86";
+        track(fmt(Math.max(0, SEGS[i].e - t)) + " REMAINING", 3, 62, 4);
+        ctx.globalAlpha = 1;
+      }
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+var runB = document.getElementById("run"), rstB = document.getElementById("rst"),
+    camB = document.getElementById("cam"), mirB = document.getElementById("mir"),
+    scrB = document.getElementById("scr"), bgB = document.getElementById("bg"),
+    cdB = document.getElementById("cd"),
+    fsB = document.getElementById("fs"), ui = document.getElementById("ui"),
+    msg = document.getElementById("msg"),
+    recB = document.getElementById("rec"), savB = document.getElementById("sav"),
+    clrB = document.getElementById("clr"), helpB = document.getElementById("help"),
+    legend = document.getElementById("legend");
+
+function frame(ts){
+  if (going){
+    if (!last) last = ts;
+    t = Math.min(TOTAL, t + (ts-last)/1000*speed);
+    last = ts;
+    if (t >= TOTAL){ going = false; runB.textContent = "BEGIN"; }
+  }
+  draw();
+  if (recOn && going){
+    if (!lastCap) lastCap = ts;
+    if (ts - lastCap >= IV){ lastCap = ts; grab(); }
+  }
+  requestAnimationFrame(frame);
+}
+
+function toggle(){
+  going = !going; last = 0;
+  runB.textContent = going ? "PAUSE" : "BEGIN";
+}
+function reset(){ going = false; t = 0; last = 0; runB.textContent = "BEGIN"; }
+
+function stopCam(){
+  if (stream){ stream.getTracks().forEach(function(tr){ tr.stop(); }); stream = null; }
+  vid.srcObject = null; camOn = false;
+  camB.textContent = "CAMERA: OFF";
+  mirB.classList.add("off"); scrB.classList.add("off");
+}
+
+/* ---------- 타임랩스 ---------- */
+
+var CAPW = Math.round(num("capw", 1280));
+var CAPH = Math.round(CAPW * 9 / 16);
+var IV = num("iv", 2) * 1000;
+var OFPS = num("ofps", 30);
+var MAXF = Math.round(num("maxf", 4000));
+
+var frames = [], recOn = false, lastCap = 0, capBusy = false, exporting = false;
+var capCv = document.createElement("canvas");
+capCv.width = CAPW; capCv.height = CAPH;
+var capCtx = capCv.getContext("2d");
+
+function estim(){
+  var secs = frames.length / OFPS;
+  return frames.length + "f · " + secs.toFixed(1) + "s";
+}
+function refreshRec(){
+  recB.textContent = recOn ? ("REC ● " + frames.length) : "REC ○";
+  recB.style.color = recOn ? "#ff6b6b" : "#fff";
+  savB.textContent = frames.length ? ("SAVE " + estim()) : "SAVE";
+  savB.classList.toggle("off", !frames.length || exporting);
+  clrB.classList.toggle("off", !frames.length);
+}
+
+function grab(){
+  if (capBusy || exporting) return;
+  capBusy = true;
+  var dpr = cv.width / vw;
+  capCtx.drawImage(cv, ox*dpr, oy*dpr, DW*S*dpr, DH*S*dpr, 0, 0, CAPW, CAPH);
+  capCv.toBlob(function(b){
+    capBusy = false;
+    if (!b || !recOn) return;
+    frames.push(b);
+    refreshRec();
+    if (frames.length >= MAXF){
+      recOn = false; refreshRec();
+      note("<h3>프레임 한도 도달</h3><div>" + MAXF +
+           "장을 모아서 녹화를 멈췄습니다. SAVE로 저장하세요.</div>");
+    }
+  }, "image/jpeg", 0.72);
+}
+
+function toggleRec(){
+  if (exporting) return;
+  recOn = !recOn;
+  lastCap = 0;
+  refreshRec();
+}
+function clearFrames(){
+  if (exporting || !frames.length) return;
+  frames = []; refreshRec();
+}
+
+function pickMime(){
+  var list = ["video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm","video/mp4"];
+  for (var i=0;i<list.length;i++){
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported(list[i])) return list[i];
+  }
+  return "";
+}
+
+function note(html){
+  msg.innerHTML = html + "<button id='msgx'>닫기</button>";
+  msg.style.display = "block";
+  document.getElementById("msgx").onclick = function(){ msg.style.display = "none"; };
+}
+function progress(html){
+  msg.innerHTML = html;
+  msg.style.display = "block";
+}
+
+function exportVideo(){
+  if (exporting || !frames.length) return;
+  var mime = pickMime();
+  if (!mime){
+    note("<h3>저장할 수 없습니다</h3><div>이 브라우저가 MediaRecorder를 지원하지 않습니다. 크롬에서 열어주세요.</div>");
+    return;
+  }
+  exporting = true; recOn = false; refreshRec();
+
+  var ec = document.createElement("canvas");
+  ec.width = CAPW; ec.height = CAPH;
+  var ectx = ec.getContext("2d");
+  var stream = ec.captureStream(OFPS);
+  var rec, chunks = [];
+  try {
+    rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6000000 });
+  } catch(e){
+    exporting = false; refreshRec();
+    note("<h3>저장 실패</h3><div>" + e.message + "</div>");
+    return;
+  }
+  rec.ondataavailable = function(e){ if (e.data && e.data.size) chunks.push(e.data); };
+  rec.onstop = function(){
+    var blob = new Blob(chunks, { type: mime });
+    var ext = mime.indexOf("mp4") >= 0 ? "mp4" : "webm";
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "focus-dial-timelapse-" + Date.now() + "." + ext;
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+    exporting = false; refreshRec();
+    note("<h3>저장 완료</h3><div>" + estim() + " · " +
+         (blob.size/1048576).toFixed(1) + "MB</div>" +
+         "<div style='margin-top:10px'>프레임은 그대로 남아 있습니다. 다시 저장하려면 SAVE, 지우려면 CLEAR를 누르세요.</div>");
+  };
+  rec.start();
+
+  var step = 1000/OFPS, idx = 0, next = performance.now();
+  function tick(){
+    if (idx >= frames.length){
+      setTimeout(function(){ rec.stop(); }, 400);
+      return;
+    }
+    createImageBitmap(frames[idx]).then(function(bmp){
+      ectx.drawImage(bmp, 0, 0, CAPW, CAPH);
+      if (bmp.close) bmp.close();
+      idx++;
+      if (idx % 10 === 0 || idx === frames.length){
+        progress("<h3>영상 만드는 중</h3><div>" + idx + " / " + frames.length +
+                 " 프레임<div style='margin-top:8px;height:4px;background:rgba(255,255,255,.2);border-radius:2px'>" +
+                 "<div style='height:4px;width:" + Math.round(idx/frames.length*100) +
+                 "%;background:#fff;border-radius:2px'></div></div></div>" +
+                 "<div style='margin-top:10px;opacity:.7'>이 창을 그대로 두세요. 다른 탭으로 가면 멈춥니다.</div>");
+      }
+      next += step;
+      var wait = next - performance.now();
+      setTimeout(tick, wait > 0 ? wait : 0);
+    }).catch(function(){
+      idx++;
+      setTimeout(tick, step);
+    });
+  }
+  tick();
+}
+
+/* ---------- 컨트롤 ---------- */
+
+function diagnose(err){
+  var p = location.protocol;
+  var sec = window.isSecureContext;
+  var api = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  var why, fix;
+
+  if (!api && !sec){
+    why = "브라우저가 이 페이지를 안전하지 않은 출처로 보고 카메라 API 자체를 막았습니다.";
+    fix = "아래 로컬 서버 방법으로 여세요.";
+  } else if (!api){
+    why = "이 브라우저에 카메라 API가 없습니다.";
+    fix = "크롬이나 파이어폭스에서 열어보세요.";
+  } else if (err && err.name === "NotAllowedError"){
+    why = "권한이 거부됐습니다. 브라우저 팝업에서 차단했거나, 운영체제 설정에서 이 브라우저의 카메라 접근이 꺼져 있습니다.";
+    fix = "주소창 왼쪽 자물쇠/카메라 아이콘을 눌러 허용으로 바꾸고, 맥이면 시스템 설정 → 개인정보 보호 → 카메라에서 브라우저를 켜주세요.";
+  } else if (err && err.name === "NotFoundError"){
+    why = "연결된 카메라를 찾지 못했습니다.";
+    fix = "웹캠 연결을 확인하세요.";
+  } else if (err && err.name === "NotReadableError"){
+    why = "다른 앱이 카메라를 이미 쓰고 있습니다.";
+    fix = "줌, OBS, 팀즈 등을 완전히 종료하고 다시 시도하세요.";
+  } else {
+    why = "알 수 없는 이유로 실패했습니다.";
+    fix = "아래 진단 내용을 알려주시면 원인을 찾아드릴게요.";
+  }
+
+  msg.innerHTML =
+    "<h3>카메라를 켤 수 없습니다</h3>" +
+    "<div>" + why + "</div>" +
+    "<div style='margin-top:10px'>" + fix + "</div>" +
+    "<div style='margin-top:14px'>가장 확실한 방법은 이 파일이 있는 폴더에서 터미널로 " +
+    "<code>python3 -m http.server 8000</code> 을 실행한 뒤 " +
+    "<code>http://localhost:8000/</code> 로 접속하는 것입니다.</div>" +
+    "<div class='diag'>protocol: " + p +
+    "<br>secureContext: " + sec +
+    "<br>mediaDevices API: " + api +
+    "<br>error: " + (err ? (err.name + " — " + (err.message||"")) : "none") +
+    "<br>ua: " + navigator.userAgent.slice(0,90) + "</div>" +
+    "<button id='msgx'>닫기</button>";
+  msg.style.display = "block";
+  document.getElementById("msgx").onclick = function(){ msg.style.display = "none"; };
+}
+
+function startCam(deviceId){
+  msg.style.display = "none";
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    camB.textContent = "CAMERA: BLOCKED"; diagnose(null); return;
+  }
+  var cons = { video: deviceId ? { deviceId:{ exact:deviceId }, width:{ ideal:1920 } }
+                              : { width:{ ideal:1920 }, height:{ ideal:1080 } },
+               audio: false };
+  camB.textContent = "CAMERA: …";
+  navigator.mediaDevices.getUserMedia(cons).then(function(s){
+    if (stream) stream.getTracks().forEach(function(tr){ tr.stop(); });
+    stream = s; vid.srcObject = s; vid.play();
+    camOn = true;
+    camB.textContent = "CAMERA: ON";
+    mirB.classList.toggle("off", !mirror);
+    scrB.classList.toggle("off", SCRIMS[sci][1] === 0);
+    return navigator.mediaDevices.enumerateDevices();
+  }).then(function(list){
+    if (list) cams = list.filter(function(d){ return d.kind === "videoinput"; });
+  }).catch(function(err){
+    camOn = false;
+    camB.textContent = "CAMERA: FAILED";
+    diagnose(err);
+  });
+}
+
+function toggleCam(){ if (camOn) stopCam(); else startCam(null); }
+function nextCam(){
+  if (!camOn || cams.length < 2) return;
+  camIdx = (camIdx+1) % cams.length;
+  startCam(cams[camIdx].deviceId);
+}
+function toggleMirror(){
+  mirror = !mirror;
+  mirB.classList.toggle("off", !mirror);
+}
+function cycleScrim(){
+  sci = (sci+1) % SCRIMS.length;
+  scrB.textContent = "SCRIM: " + SCRIMS[sci][0];
+  scrB.classList.toggle("off", SCRIMS[sci][1] === 0);
+}
+function cycleBg(){
+  bgi = (bgi+1) % BGS.length;
+  bgB.textContent = "BG: " + BGS[bgi][0];
+  document.body.style.background = BGS[bgi][1];
+}
+function toggleCd(){ showCd = !showCd; cdB.textContent = "COUNTDOWN: " + (showCd?"ON":"OFF"); }
+function fullscreen(){
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen();
+}
+
+runB.onclick = toggle; rstB.onclick = reset; camB.onclick = toggleCam;
+mirB.onclick = toggleMirror; scrB.onclick = cycleScrim; bgB.onclick = cycleBg;
+cdB.onclick = toggleCd; fsB.onclick = fullscreen;
+recB.onclick = toggleRec; savB.onclick = exportVideo; clrB.onclick = clearFrames;
+helpB.onclick = function(e){ e.stopPropagation(); legend.classList.toggle("show"); };
+document.addEventListener("click", function(e){
+  if (legend.classList.contains("show") && e.target !== helpB) legend.classList.remove("show");
+});
+
+document.addEventListener("keydown", function(e){
+  var k = e.key.toLowerCase();
+  if (e.code === "Space"){ e.preventDefault(); toggle(); }
+  else if (k === "r") reset();
+  else if (k === "v") toggleCam();
+  else if (k === "n") nextCam();
+  else if (k === "m") toggleMirror();
+  else if (k === "s") cycleScrim();
+  else if (k === "b") cycleBg();
+  else if (k === "c") toggleCd();
+  else if (k === "f") fullscreen();
+  else if (k === "t") toggleRec();
+  else if (k === "e") exportVideo();
+});
+
+var hideT;
+function poke(){
+  ui.classList.remove("hide");
+  clearTimeout(hideT);
+  hideT = setTimeout(function(){ ui.classList.add("hide"); }, 2500);
+}
+document.addEventListener("mousemove", poke);
+poke();
+
+resize();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
