@@ -91,6 +91,7 @@
 <main id="app">
   <canvas id="c"></canvas>
   <video id="v" playsinline muted></video>
+  <audio id="chime" src="sound/dial-transition.m4a" preload="auto"></audio>
 
   <!-- 광고 자리: 승인 후 아래를 실제 <ins class="adsbygoogle"> 유닛으로 교체. ?ads=0 으로 숨김 (OBS 오버레이용) -->
   <aside id="ad" aria-label="광고">
@@ -121,6 +122,7 @@
     <div class="grp">
       <button id="bg">BG: WHITE</button>
       <button id="cd">COUNTDOWN: ON</button>
+      <button id="snd">SOUND: ON</button>
       <button id="fs">FULLSCREEN</button>
     </div>
     <div class="end">
@@ -136,6 +138,7 @@
         <dt>S</dt><dd>스크림 밝기</dd>
         <dt>B</dt><dd>배경색</dd>
         <dt>C</dt><dd>타이머 표시</dd>
+        <dt>U</dt><dd>효과음 켜기/끄기</dd>
         <dt>F</dt><dd>전체화면</dd>
       </dl>
     </div>
@@ -383,12 +386,38 @@ function draw(){
 var runB = document.getElementById("run"), rstB = document.getElementById("rst"),
     camB = document.getElementById("cam"), mirB = document.getElementById("mir"),
     scrB = document.getElementById("scr"), bgB = document.getElementById("bg"),
-    cdB = document.getElementById("cd"),
+    cdB = document.getElementById("cd"), sndB = document.getElementById("snd"),
     fsB = document.getElementById("fs"), ui = document.getElementById("ui"),
     msg = document.getElementById("msg"),
     recB = document.getElementById("rec"), savB = document.getElementById("sav"),
     clrB = document.getElementById("clr"), helpB = document.getElementById("help"),
-    legend = document.getElementById("legend");
+    legend = document.getElementById("legend"), chime = document.getElementById("chime");
+
+/* ---------- 세션 전환 효과음 ---------- */
+
+var soundOn = true;
+try { soundOn = localStorage.getItem("pomocam_sound_off") !== "1"; } catch(e){}
+sndB.textContent = "SOUND: " + (soundOn ? "ON" : "OFF");
+sndB.classList.toggle("off", !soundOn);
+
+function segIndexAt(tt){
+  for (var i=0;i<N;i++){ if (tt < SEGS[i].e - 1e-6) return i; }
+  return N-1;
+}
+var lastSegIdx = segIndexAt(0);
+
+function playChime(){
+  if (!soundOn) return;
+  chime.currentTime = 0;
+  chime.play().catch(function(){});
+}
+
+function toggleSound(){
+  soundOn = !soundOn;
+  sndB.textContent = "SOUND: " + (soundOn ? "ON" : "OFF");
+  sndB.classList.toggle("off", !soundOn);
+  try { localStorage.setItem("pomocam_sound_off", soundOn ? "0" : "1"); } catch(e){}
+}
 
 function frame(ts){
   if (going){
@@ -396,6 +425,8 @@ function frame(ts){
     t = Math.min(TOTAL, t + (ts-last)/1000*speed);
     last = ts;
     if (t >= TOTAL){ going = false; runB.textContent = "BEGIN"; }
+    var idx = segIndexAt(t);
+    if (idx !== lastSegIdx){ playChime(); lastSegIdx = idx; }
   }
   draw();
   if (recOn && going){
@@ -409,7 +440,7 @@ function toggle(){
   going = !going; last = 0;
   runB.textContent = going ? "PAUSE" : "BEGIN";
 }
-function reset(){ going = false; t = 0; last = 0; runB.textContent = "BEGIN"; }
+function reset(){ going = false; t = 0; last = 0; lastSegIdx = segIndexAt(0); runB.textContent = "BEGIN"; }
 
 function stopCam(){
   if (stream){ stream.getTracks().forEach(function(tr){ tr.stop(); }); stream = null; }
@@ -641,7 +672,7 @@ function fullscreen(){
 
 runB.onclick = toggle; rstB.onclick = reset; camB.onclick = toggleCam;
 mirB.onclick = toggleMirror; scrB.onclick = cycleScrim; bgB.onclick = cycleBg;
-cdB.onclick = toggleCd; fsB.onclick = fullscreen;
+cdB.onclick = toggleCd; sndB.onclick = toggleSound; fsB.onclick = fullscreen;
 recB.onclick = toggleRec; savB.onclick = exportVideo; clrB.onclick = clearFrames;
 helpB.onclick = function(e){ e.stopPropagation(); legend.classList.toggle("show"); };
 document.addEventListener("click", function(e){
@@ -658,6 +689,7 @@ document.addEventListener("keydown", function(e){
   else if (k === "s") cycleScrim();
   else if (k === "b") cycleBg();
   else if (k === "c") toggleCd();
+  else if (k === "u") toggleSound();
   else if (k === "f") fullscreen();
   else if (k === "t") toggleRec();
   else if (k === "e") exportVideo();
