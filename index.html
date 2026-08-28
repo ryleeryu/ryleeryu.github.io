@@ -33,6 +33,16 @@
   #ad .ad-close:hover{opacity:1}
   body.no-ad #ad{display:none}
 
+  /* recording indicator */
+  #recdot{position:fixed;top:58px;right:18px;z-index:4;display:none;
+      align-items:center;gap:7px;padding:6px 12px;border-radius:20px;
+      background:var(--bar-bg);color:#fff;
+      font:700 11px/1 var(--font);letter-spacing:1.5px;user-select:none}
+  #recdot.show{display:flex}
+  #recdot .dot{width:8px;height:8px;border-radius:50%;background:#ff3b30;
+      animation:recblink 1.1s ease-in-out infinite}
+  @keyframes recblink{0%,100%{opacity:1}50%{opacity:.25}}
+
   /* message / dialog box */
   #msg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);max-width:620px;
       padding:26px 30px;background:var(--panel-bg);color:#fff;border-radius:10px;
@@ -92,6 +102,8 @@
   <canvas id="c"></canvas>
   <video id="v" playsinline muted></video>
   <audio id="chime" src="sound/dial-transition.m4a" preload="auto"></audio>
+
+  <div id="recdot" role="status" aria-label="녹화 중"><span class="dot"></span>REC</div>
 
   <!-- 광고 자리: 승인 후 아래를 실제 <ins class="adsbygoogle"> 유닛으로 교체. ?ads=0 으로 숨김 (OBS 오버레이용) -->
   <aside id="ad" aria-label="광고">
@@ -391,7 +403,8 @@ var runB = document.getElementById("run"), rstB = document.getElementById("rst")
     msg = document.getElementById("msg"),
     recB = document.getElementById("rec"), savB = document.getElementById("sav"),
     clrB = document.getElementById("clr"), helpB = document.getElementById("help"),
-    legend = document.getElementById("legend"), chime = document.getElementById("chime");
+    legend = document.getElementById("legend"), chime = document.getElementById("chime"),
+    recDot = document.getElementById("recdot");
 
 /* ---------- 세션 전환 효과음 ---------- */
 
@@ -473,6 +486,7 @@ function refreshRec(){
   savB.textContent = frames.length ? ("SAVE " + estim()) : "SAVE";
   savB.classList.toggle("off", !frames.length || exporting);
   clrB.classList.toggle("off", !frames.length);
+  recDot.classList.toggle("show", recOn);
 }
 
 function grab(){
