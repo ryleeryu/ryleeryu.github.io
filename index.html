@@ -2,7 +2,12 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<title>Focus Dial 60 — Chroma Key / Camera</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pomo Cam — 뽀모도로 타임랩스 카메라</title>
+<meta name="description" content="25분 집중, 5분 휴식을 도는 뽀모도로 타이머 겸 카메라 오버레이. 크로마키 배경이나 내 웹캠을 깔고 세션을 타임랩스 영상으로 저장하세요.">
+<meta property="og:title" content="Pomo Cam — 뽀모도로 타임랩스 카메라">
+<meta property="og:description" content="25분 집중, 5분 휴식을 도는 뽀모도로 타이머 겸 카메라 오버레이. 세션을 타임랩스 영상으로 저장하세요.">
+<meta property="og:type" content="website">
 <style>
   html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#FFFFFF}
   canvas{display:block;width:100vw;height:100vh}
@@ -39,11 +44,32 @@
       font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;opacity:.75}
   #msg button{margin-top:16px;background:#fff;color:#111;border:none;border-radius:5px;
       padding:8px 16px;font:600 12px/1 inherit;letter-spacing:1px;cursor:pointer}
+  #ad{position:fixed;left:0;right:0;top:0;height:44px;z-index:4;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      background:rgba(0,0,0,.5);color:rgba(255,255,255,.55);
+      font:500 10px/1 -apple-system,"Helvetica Neue",Arial,sans-serif;
+      letter-spacing:1.5px;user-select:none}
+  #ad .x{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+      opacity:.6;cursor:pointer;font-size:14px;line-height:1;padding:4px}
+  #ad .x:hover{opacity:1}
+  body.no-ad #ad{display:none}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <video id="v" playsinline muted></video>
+
+<!-- AD SLOT — 광고 자리. 아래 div 안을 실제 AdSense <ins> 태그로 교체하세요.
+     예: <ins class="adsbygoogle" style="display:inline-block;width:728px;height:44px"
+             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins>
+     그리고 </head> 앞에 아래 스크립트를 추가하세요 (client 값은 발급받은 값으로 교체):
+     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+     ?ads=0 을 주소 끝에 붙이면 이 자리가 숨겨집니다 (OBS 오버레이용). -->
+<div id="ad">
+  <span>AD SPACE — 728×44</span>
+  <span class="x" id="adx" title="숨기기">&times;</span>
+</div>
+
 <div id="msg"></div>
 <div id="ui">
 <div class="grp">
@@ -103,6 +129,19 @@ var bgi = 0, sci = 0;
 
 var q = new URLSearchParams(location.search);
 function num(k, d){ var v = parseFloat(q.get(k)); return isFinite(v) && v > 0 ? v : d; }
+
+(function initAd(){
+  var dismissed = false;
+  try { dismissed = localStorage.getItem("pomocam_ad_hide") === "1"; } catch(e){}
+  if (q.get("ads") === "0" || dismissed) document.body.classList.add("no-ad");
+  document.addEventListener("DOMContentLoaded", function(){
+    var x = document.getElementById("adx");
+    if (x) x.onclick = function(){
+      document.body.classList.add("no-ad");
+      try { localStorage.setItem("pomocam_ad_hide", "1"); } catch(e){}
+    };
+  });
+})();
 
 var TW = num("tw", 0.8);
 var PEAK = num("peak", 5);
