@@ -220,6 +220,7 @@
 
 var DW = 1920, DH = 1080;
 var CX = -269, CY = 540, R = 829;
+var FOCUS_X = 760;
 var SPAN = 30;
 var FONT = '"Helvetica Neue",Helvetica,Arial,"Segoe UI",sans-serif';
 
@@ -315,12 +316,24 @@ var cv = document.getElementById("c"), ctx = cv.getContext("2d");
 var vid = document.getElementById("v");
 var vw = 0, vh = 0, S = 1, ox = 0, oy = 0;
 
+var PORTRAIT = false, TXS = 1;
 function resize(){
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
   vw = window.innerWidth; vh = window.innerHeight;
   cv.width = Math.round(vw*dpr); cv.height = Math.round(vh*dpr);
-  S = Math.min(vw/DW, vh/DH);
-  ox = (vw - DW*S)/2; oy = (vh - DH*S)/2;
+  PORTRAIT = vh > vw;
+  if (PORTRAIT){
+    /* 세로(모바일) 화면: 위아래를 꽉 채우고, 글자는 좁은 폭에 맞게 줄여서
+       다이얼이 있는 부분을 중심으로 잘라서 보여줌 */
+    S = Math.max(vw/DW, vh/DH);
+    TXS = 0.6;
+    ox = vw/2 - FOCUS_X*S;
+    oy = (vh - DH*S)/2;
+  } else {
+    S = Math.min(vw/DW, vh/DH);
+    TXS = 1;
+    ox = (vw - DW*S)/2; oy = (vh - DH*S)/2;
+  }
 }
 window.addEventListener("resize", resize);
 
@@ -394,9 +407,9 @@ function draw(){
     ctx.fillStyle = rgb(pal.dotFar, pal.dotNear, w);
     ctx.fill();
 
-    var fs = 30 + 48*w;
+    var fs = (30 + 48*w) * TXS;
     ctx.save();
-    ctx.translate(x + 40 + 26*w, y);
+    ctx.translate(x + (40 + 26*w) * TXS, y);
     ctx.rotate(p*0.5*(1-w)*Math.PI/180);
     ctx.font = (w > 0.55 ? "700 " : "400 ") + fs.toFixed(1) + "px " + FONT;
     ctx.fillStyle = rgb(pal.txtFar, pal.txtNear, w);
@@ -406,9 +419,9 @@ function draw(){
       var op = Math.max(0, Math.min(1, (w-0.55)/0.30));
       if (op > 0.01){
         ctx.globalAlpha = op;
-        ctx.font = "400 27px " + FONT;
+        ctx.font = "400 " + (27*TXS).toFixed(1) + "px " + FONT;
         ctx.fillStyle = pal.sub;
-        track(fmt(Math.max(0, SEGS[i].e - t)) + " REMAINING", 3, 62, 4);
+        track(fmt(Math.max(0, SEGS[i].e - t)) + " REMAINING", 3, 62*TXS, 4*TXS);
         ctx.globalAlpha = 1;
       }
     }
@@ -435,12 +448,17 @@ try { soundOn = localStorage.getItem("pomocam_sound_off") !== "1"; } catch(e){}
 sndB.textContent = "SOUND: " + (soundOn ? "ON" : "OFF");
 sndB.classList.toggle("off", !soundOn);
 
-var SOUND_LEAD = 0.2;
+var SOUND_LEAD = 0.4;
 function segIndexAt(tt){
   for (var i=0;i<N;i++){ if (tt < SEGS[i].e - 1e-6) return i; }
   return N-1;
 }
 var lastSegIdx = segIndexAt(SOUND_LEAD);
+
+chime.preservesPitch = true;
+chime.mozPreservesPitch = true;
+chime.webkitPreservesPitch = true;
+chime.playbackRate = 1.2;
 
 function playChime(){
   if (!soundOn) return;
@@ -541,7 +559,10 @@ function clearFrames(){
 }
 
 function pickMime(){
-  var list = ["video/webm;codecs=vp9","video/webm;codecs=vp8","video/webm","video/mp4"];
+  var list = [
+    "video/mp4;codecs=avc1", "video/mp4;codecs=h264", "video/mp4",
+    "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"
+  ];
   for (var i=0;i<list.length;i++){
     if (window.MediaRecorder && MediaRecorder.isTypeSupported(list[i])) return list[i];
   }
@@ -589,8 +610,11 @@ function exportVideo(){
     a.click();
     setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
     exporting = false; refreshRec();
+    var webmNote = ext === "webm"
+      ? "<div class='mt'>스마트폰 기본 갤러리 앱에서 이 파일이 안 열리면, 크롬 브라우저의 다운로드 목록에서 열거나 VLC 같은 재생 앱을 사용해보세요.</div>"
+      : "";
     note("<h3>저장 완료</h3><div>" + estim() + " · " +
-         (blob.size/1048576).toFixed(1) + "MB</div>" +
+         (blob.size/1048576).toFixed(1) + "MB</div>" + webmNote +
          "<div class='mt'>프레임은 그대로 남아 있습니다. 다시 저장하려면 SAVE, 지우려면 CLEAR를 누르세요.</div>");
   };
   rec.start();
@@ -661,7 +685,7 @@ function startCam(deviceId){
     camB.textContent = "CAMERA: BLOCKED"; diagnose(null); return;
   }
   var cons = { video: deviceId ? { deviceId:{ exact:deviceId }, width:{ ideal:1920 } }
-                              : { width:{ ideal:1920 }, height:{ ideal:1080 } },
+                              : { facingMode:{ ideal:"user" }, width:{ ideal:1920 }, height:{ ideal:1080 } },
                audio: false };
   camB.textContent = "CAMERA: …";
   navigator.mediaDevices.getUserMedia(cons).then(function(s){
