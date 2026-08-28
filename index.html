@@ -11,121 +11,142 @@
 <meta name="google-adsense-account" content="ca-pub-4700980396851252">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4700980396851252" crossorigin="anonymous"></script>
 <style>
-  html,body{margin:0;padding:0;overflow-x:hidden;background:#FFFFFF}
+  :root{
+    --font: -apple-system,"Helvetica Neue",Arial,"Segoe UI",sans-serif;
+    --font-mono: ui-monospace,Menlo,Consolas,monospace;
+    --panel-bg: rgba(20,20,20,.92);
+    --panel-bg-strong: rgba(20,20,20,.95);
+    --bar-bg: rgba(0,0,0,.55);
+  }
+  html,body{margin:0;padding:0;overflow-x:hidden;background:#fff}
+
+  /* app viewport */
   canvas{display:block;width:100vw;height:100vh}
-  #about{max-width:640px;margin:0 auto;padding:80px 24px 100px;
-      font:400 15px/1.85 -apple-system,"Helvetica Neue",Arial,sans-serif;
-      color:#333;letter-spacing:.1px}
-  #about h1{font:700 26px/1.3 -apple-system,"Helvetica Neue",Arial,sans-serif;
-      color:#111;margin:0 0 8px;letter-spacing:-.2px}
-  #about .tag{color:#888;font-size:14px;margin:0 0 40px}
-  #about h2{font:700 16px/1.4 -apple-system,"Helvetica Neue",Arial,sans-serif;
-      color:#111;margin:36px 0 10px;letter-spacing:.2px}
-  #about ul{margin:0;padding-left:20px}
-  #about li{margin:4px 0}
-  #about footer{margin-top:56px;padding-top:20px;border-top:1px solid #eee;
-      font-size:13px;color:#999}
-  #about footer a{color:#666}
   video{display:none}
+
+  /* ad slot */
+  #ad{position:fixed;left:0;right:0;top:0;height:44px;z-index:4;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      background:var(--bar-bg);color:rgba(255,255,255,.55);
+      font:500 10px/1 var(--font);letter-spacing:1.5px;user-select:none}
+  #ad .ad-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);
+      opacity:.6;cursor:pointer;font-size:14px;line-height:1;padding:4px}
+  #ad .ad-close:hover{opacity:1}
+  body.no-ad #ad{display:none}
+
+  /* message / dialog box */
+  #msg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);max-width:620px;
+      padding:26px 30px;background:var(--panel-bg);color:#fff;border-radius:10px;
+      font:400 14px/1.7 var(--font);display:none}
+  #msg h3{margin:0 0 12px;font-size:15px;letter-spacing:.5px}
+  #msg code{background:rgba(255,255,255,.14);padding:2px 7px;border-radius:4px;
+      font-family:var(--font-mono);font-size:13px}
+  #msg .mt{margin-top:10px}
+  #msg .mt-lg{margin-top:14px}
+  #msg .hint{margin-top:10px;opacity:.7}
+  #msg .diag{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.2);
+      font-family:var(--font-mono);font-size:12px;opacity:.75}
+  #msg .bar{margin-top:8px;height:4px;background:rgba(255,255,255,.2);border-radius:2px}
+  #msg .bar-fill{height:4px;background:#fff;border-radius:2px}
+  #msg button{margin-top:16px;background:#fff;color:#111;border:none;border-radius:5px;
+      padding:8px 16px;font:600 12px/1 var(--font);letter-spacing:1px;cursor:pointer}
+
+  /* control bar */
   #ui{position:fixed;left:0;right:0;bottom:0;padding:15px 22px;display:flex;
       align-items:center;flex-wrap:wrap;row-gap:10px;
-      font:500 11px/1 -apple-system,"Helvetica Neue",Arial,sans-serif;
-      letter-spacing:1.3px;color:#fff;background:rgba(0,0,0,.55);
-      transition:opacity .4s;user-select:none}
+      font:500 11px/1 var(--font);letter-spacing:1.3px;color:#fff;
+      background:var(--bar-bg);transition:opacity .4s;user-select:none}
   #ui.hide{opacity:0;pointer-events:none}
   #ui .grp{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   #ui .dv{width:1px;height:13px;background:rgba(255,255,255,.22);margin:0 20px;flex:none}
-  #ui .end{margin-left:auto;display:flex;align-items:center;gap:16px}
+  #ui .end{position:relative;margin-left:auto;display:flex;align-items:center;gap:16px}
   #ui button{background:none;border:none;color:#fff;font:inherit;letter-spacing:1.3px;
       cursor:pointer;padding:6px 0;white-space:nowrap}
   #ui button:hover{color:#9ad}
   #ui button.off{opacity:.35}
   #ui button.primary{font-weight:700}
-  #help{opacity:.55;font-weight:700;width:20px;text-align:center;padding:6px 0 6px 0!important}
+  #help{opacity:.55;font-weight:700;width:20px;text-align:center;padding:6px 0!important}
   #help:hover{opacity:1}
+
+  /* keyboard shortcut legend */
   #legend{position:absolute;right:0;bottom:calc(100% + 10px);width:280px;
-      background:rgba(20,20,20,.95);border-radius:8px;padding:14px 16px;
-      font:400 12px/1.9 -apple-system,"Helvetica Neue",Arial,sans-serif;
-      letter-spacing:.2px;display:none;box-shadow:0 8px 24px rgba(0,0,0,.35)}
-  #legend.show{display:block}
-  #legend b{display:inline-block;width:78px;opacity:.6;font-weight:600}
-  #msg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);max-width:620px;
-      padding:26px 30px;background:rgba(20,20,20,.92);color:#fff;border-radius:10px;
-      font:400 14px/1.7 -apple-system,"Helvetica Neue",Arial,sans-serif;display:none}
-  #msg h3{margin:0 0 12px;font-size:15px;letter-spacing:.5px}
-  #msg code{background:rgba(255,255,255,.14);padding:2px 7px;border-radius:4px;
-      font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
-  #msg .diag{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.2);
-      font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;opacity:.75}
-  #msg button{margin-top:16px;background:#fff;color:#111;border:none;border-radius:5px;
-      padding:8px 16px;font:600 12px/1 inherit;letter-spacing:1px;cursor:pointer}
-  #ad{position:fixed;left:0;right:0;top:0;height:44px;z-index:4;
-      display:flex;align-items:center;justify-content:center;gap:8px;
-      background:rgba(0,0,0,.5);color:rgba(255,255,255,.55);
-      font:500 10px/1 -apple-system,"Helvetica Neue",Arial,sans-serif;
-      letter-spacing:1.5px;user-select:none}
-  #ad .x{position:absolute;right:10px;top:50%;transform:translateY(-50%);
-      opacity:.6;cursor:pointer;font-size:14px;line-height:1;padding:4px}
-  #ad .x:hover{opacity:1}
-  body.no-ad #ad{display:none}
+      margin:0;background:var(--panel-bg-strong);border-radius:8px;padding:14px 16px;
+      font:400 12px/1.9 var(--font);letter-spacing:.2px;
+      display:none;grid-template-columns:78px 1fr;row-gap:0;
+      box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  #legend.show{display:grid}
+  #legend dt{opacity:.6;font-weight:600}
+  #legend dd{margin:0}
+
+  /* about / intro content */
+  #about{max-width:640px;margin:0 auto;padding:80px 24px 100px;
+      font:400 15px/1.85 var(--font);color:#333;letter-spacing:.1px}
+  #about h1,#about h2{font-family:var(--font);font-weight:700;color:#111}
+  #about h1{font-size:26px;line-height:1.3;margin:0 0 8px;letter-spacing:-.2px}
+  #about .tag{color:#888;font-size:14px;margin:0 0 40px}
+  #about h2{font-size:16px;line-height:1.4;margin:36px 0 10px;letter-spacing:.2px}
+  #about ul{margin:0;padding-left:20px}
+  #about li{margin:4px 0}
+  #about footer{margin-top:56px;padding-top:20px;border-top:1px solid #eee;
+      font-size:13px;color:#999}
+  #about footer a{color:#666}
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
-<video id="v" playsinline muted></video>
 
-<!-- AD SLOT — 광고 자리. 아래 div 안을 실제 AdSense <ins> 태그로 교체하세요.
-     예: <ins class="adsbygoogle" style="display:inline-block;width:728px;height:44px"
-             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins>
-     그리고 </head> 앞에 아래 스크립트를 추가하세요 (client 값은 발급받은 값으로 교체):
-     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
-     ?ads=0 을 주소 끝에 붙이면 이 자리가 숨겨집니다 (OBS 오버레이용). -->
-<div id="ad">
-  <span>AD SPACE — 728×44</span>
-  <span class="x" id="adx" title="숨기기">&times;</span>
-</div>
+<main id="app">
+  <canvas id="c"></canvas>
+  <video id="v" playsinline muted></video>
 
-<div id="msg"></div>
-<div id="ui">
-<div class="grp">
-  <button id="run" class="primary">BEGIN</button>
-  <button id="rst">RESET</button>
-</div>
-<div class="dv"></div>
-<div class="grp">
-  <button id="rec">REC &#9675;</button>
-  <button id="sav" class="off">SAVE</button>
-  <button id="clr" class="off">CLEAR</button>
-</div>
-<div class="dv"></div>
-<div class="grp">
-  <button id="cam">CAMERA: OFF</button>
-  <button id="mir" class="off">MIRROR</button>
-  <button id="scr" class="off">SCRIM: SOFT</button>
-</div>
-<div class="dv"></div>
-<div class="grp">
-  <button id="bg">BG: WHITE</button>
-  <button id="cd">COUNTDOWN: ON</button>
-  <button id="fs">FULLSCREEN</button>
-</div>
-<div class="end" style="position:relative">
-  <button id="help">?</button>
-  <div id="legend">
-    <div><b>SPACE</b>재생 / 일시정지</div>
-    <div><b>R</b>처음으로</div>
-    <div><b>T</b>녹화 시작/정지</div>
-    <div><b>E</b>영상으로 저장</div>
-    <div><b>V</b>카메라 켜기/끄기</div>
-    <div><b>N</b>카메라 전환</div>
-    <div><b>M</b>좌우 반전</div>
-    <div><b>S</b>스크림 밝기</div>
-    <div><b>B</b>배경색</div>
-    <div><b>C</b>타이머 표시</div>
-    <div><b>F</b>전체화면</div>
-  </div>
-</div>
-</div>
+  <!-- 광고 자리: 승인 후 아래를 실제 <ins class="adsbygoogle"> 유닛으로 교체. ?ads=0 으로 숨김 (OBS 오버레이용) -->
+  <aside id="ad" aria-label="광고">
+    <span>AD SPACE — 728×44</span>
+    <span class="ad-close" id="adx" title="숨기기">&times;</span>
+  </aside>
+
+  <div id="msg" role="status" aria-live="polite"></div>
+
+  <footer id="ui" role="toolbar" aria-label="컨트롤">
+    <div class="grp">
+      <button id="run" class="primary">BEGIN</button>
+      <button id="rst">RESET</button>
+    </div>
+    <div class="dv"></div>
+    <div class="grp">
+      <button id="rec">REC &#9675;</button>
+      <button id="sav" class="off">SAVE</button>
+      <button id="clr" class="off">CLEAR</button>
+    </div>
+    <div class="dv"></div>
+    <div class="grp">
+      <button id="cam">CAMERA: OFF</button>
+      <button id="mir" class="off">MIRROR</button>
+      <button id="scr" class="off">SCRIM: SOFT</button>
+    </div>
+    <div class="dv"></div>
+    <div class="grp">
+      <button id="bg">BG: WHITE</button>
+      <button id="cd">COUNTDOWN: ON</button>
+      <button id="fs">FULLSCREEN</button>
+    </div>
+    <div class="end">
+      <button id="help" aria-label="단축키 안내">?</button>
+      <dl id="legend">
+        <dt>SPACE</dt><dd>재생 / 일시정지</dd>
+        <dt>R</dt><dd>처음으로</dd>
+        <dt>T</dt><dd>녹화 시작/정지</dd>
+        <dt>E</dt><dd>영상으로 저장</dd>
+        <dt>V</dt><dd>카메라 켜기/끄기</dd>
+        <dt>N</dt><dd>카메라 전환</dd>
+        <dt>M</dt><dd>좌우 반전</dd>
+        <dt>S</dt><dd>스크림 밝기</dd>
+        <dt>B</dt><dd>배경색</dd>
+        <dt>C</dt><dd>타이머 표시</dd>
+        <dt>F</dt><dd>전체화면</dd>
+      </dl>
+    </div>
+  </footer>
+</main>
 
 <section id="about">
   <h1>Pomo Cam</h1>
@@ -508,7 +529,7 @@ function exportVideo(){
     exporting = false; refreshRec();
     note("<h3>저장 완료</h3><div>" + estim() + " · " +
          (blob.size/1048576).toFixed(1) + "MB</div>" +
-         "<div style='margin-top:10px'>프레임은 그대로 남아 있습니다. 다시 저장하려면 SAVE, 지우려면 CLEAR를 누르세요.</div>");
+         "<div class='mt'>프레임은 그대로 남아 있습니다. 다시 저장하려면 SAVE, 지우려면 CLEAR를 누르세요.</div>");
   };
   rec.start();
 
@@ -524,10 +545,10 @@ function exportVideo(){
       idx++;
       if (idx % 10 === 0 || idx === frames.length){
         progress("<h3>영상 만드는 중</h3><div>" + idx + " / " + frames.length +
-                 " 프레임<div style='margin-top:8px;height:4px;background:rgba(255,255,255,.2);border-radius:2px'>" +
-                 "<div style='height:4px;width:" + Math.round(idx/frames.length*100) +
-                 "%;background:#fff;border-radius:2px'></div></div></div>" +
-                 "<div style='margin-top:10px;opacity:.7'>이 창을 그대로 두세요. 다른 탭으로 가면 멈춥니다.</div>");
+                 " 프레임<div class='bar'>" +
+                 "<div class='bar-fill' style='width:" + Math.round(idx/frames.length*100) +
+                 "%'></div></div></div>" +
+                 "<div class='hint'>이 창을 그대로 두세요. 다른 탭으로 가면 멈춥니다.</div>");
       }
       next += step;
       var wait = next - performance.now();
@@ -571,8 +592,8 @@ function diagnose(err){
   msg.innerHTML =
     "<h3>카메라를 켤 수 없습니다</h3>" +
     "<div>" + why + "</div>" +
-    "<div style='margin-top:10px'>" + fix + "</div>" +
-    "<div style='margin-top:14px'>가장 확실한 방법은 이 파일이 있는 폴더에서 터미널로 " +
+    "<div class='mt'>" + fix + "</div>" +
+    "<div class='mt-lg'>가장 확실한 방법은 이 파일이 있는 폴더에서 터미널로 " +
     "<code>python3 -m http.server 8000</code> 을 실행한 뒤 " +
     "<code>http://localhost:8000/</code> 로 접속하는 것입니다.</div>" +
     "<div class='diag'>protocol: " + p +
