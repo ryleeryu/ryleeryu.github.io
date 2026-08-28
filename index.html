@@ -94,6 +94,14 @@
   #about footer{margin-top:56px;padding-top:20px;border-top:1px solid #eee;
       font-size:13px;color:#999}
   #about footer a{color:#666}
+
+  body.theme-blue{color:rgba(255,255,255,.9)}
+  body.theme-blue #about{color:rgba(255,255,255,.9)}
+  body.theme-blue #about h1,
+  body.theme-blue #about h2{color:#fff}
+  body.theme-blue #about .tag{color:rgba(255,255,255,.65)}
+  body.theme-blue #about footer{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.6)}
+  body.theme-blue #about footer a{color:#fff}
 </style>
 </head>
 <body>
@@ -514,7 +522,7 @@ function grab(){
       note("<h3>프레임 한도 도달</h3><div>" + MAXF +
            "장을 모아서 녹화를 멈췄습니다. SAVE로 저장하세요.</div>");
     }
-  }, "image/jpeg", 0.72);
+  }, "image/jpeg", 0.92);
 }
 
 function toggleRec(){
@@ -561,7 +569,7 @@ function exportVideo(){
   var stream = ec.captureStream(OFPS);
   var rec, chunks = [];
   try {
-    rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 6000000 });
+    rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 10000000 });
   } catch(e){
     exporting = false; refreshRec();
     note("<h3>저장 실패</h3><div>" + e.message + "</div>");
@@ -688,6 +696,7 @@ function cycleBg(){
   bgi = (bgi+1) % BGS.length;
   bgB.textContent = "BG: " + BGS[bgi][0];
   document.body.style.background = BGS[bgi][1];
+  document.body.classList.toggle("theme-blue", BGS[bgi][0] === "BLUE");
 }
 function toggleCd(){ showCd = !showCd; cdB.textContent = "COUNTDOWN: " + (showCd?"ON":"OFF"); }
 function fullscreen(){
