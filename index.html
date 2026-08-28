@@ -13,7 +13,6 @@
 <style>
   :root{
     --font: -apple-system,"Helvetica Neue",Arial,"Segoe UI",sans-serif;
-    --font-mono: ui-monospace,Menlo,Consolas,monospace;
     --panel-bg: rgba(20,20,20,.92);
     --panel-bg-strong: rgba(20,20,20,.95);
     --bar-bg: rgba(0,0,0,.55);
@@ -39,13 +38,8 @@
       padding:26px 30px;background:var(--panel-bg);color:#fff;border-radius:10px;
       font:400 14px/1.7 var(--font);display:none}
   #msg h3{margin:0 0 12px;font-size:15px;letter-spacing:.5px}
-  #msg code{background:rgba(255,255,255,.14);padding:2px 7px;border-radius:4px;
-      font-family:var(--font-mono);font-size:13px}
   #msg .mt{margin-top:10px}
-  #msg .mt-lg{margin-top:14px}
   #msg .hint{margin-top:10px;opacity:.7}
-  #msg .diag{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.2);
-      font-family:var(--font-mono);font-size:12px;opacity:.75}
   #msg .bar{margin-top:8px;height:4px;background:rgba(255,255,255,.2);border-radius:2px}
   #msg .bar-fill{height:4px;background:#fff;border-radius:2px}
   #msg button{margin-top:16px;background:#fff;color:#111;border:none;border-radius:5px;
@@ -564,43 +558,30 @@ function exportVideo(){
 /* ---------- 컨트롤 ---------- */
 
 function diagnose(err){
-  var p = location.protocol;
-  var sec = window.isSecureContext;
   var api = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   var why, fix;
 
-  if (!api && !sec){
-    why = "브라우저가 이 페이지를 안전하지 않은 출처로 보고 카메라 API 자체를 막았습니다.";
-    fix = "아래 로컬 서버 방법으로 여세요.";
-  } else if (!api){
-    why = "이 브라우저에 카메라 API가 없습니다.";
-    fix = "크롬이나 파이어폭스에서 열어보세요.";
+  if (!api){
+    why = "이 브라우저에서는 카메라 기능을 지원하지 않아요.";
+    fix = "크롬이나 사파리 최신 버전에서 다시 열어보세요.";
   } else if (err && err.name === "NotAllowedError"){
-    why = "권한이 거부됐습니다. 브라우저 팝업에서 차단했거나, 운영체제 설정에서 이 브라우저의 카메라 접근이 꺼져 있습니다.";
-    fix = "주소창 왼쪽 자물쇠/카메라 아이콘을 눌러 허용으로 바꾸고, 맥이면 시스템 설정 → 개인정보 보호 → 카메라에서 브라우저를 켜주세요.";
+    why = "카메라 권한이 꺼져 있어요.";
+    fix = "주소창에 있는 카메라 아이콘을 눌러 '허용'으로 바꾼 뒤 다시 시도해주세요. 맥이라면 시스템 설정의 개인정보 보호 항목에서도 브라우저의 카메라 접근을 켜주셔야 해요.";
   } else if (err && err.name === "NotFoundError"){
-    why = "연결된 카메라를 찾지 못했습니다.";
-    fix = "웹캠 연결을 확인하세요.";
+    why = "연결된 카메라를 찾지 못했어요.";
+    fix = "카메라가 컴퓨터에 잘 연결되어 있는지 확인해주세요.";
   } else if (err && err.name === "NotReadableError"){
-    why = "다른 앱이 카메라를 이미 쓰고 있습니다.";
-    fix = "줌, OBS, 팀즈 등을 완전히 종료하고 다시 시도하세요.";
+    why = "다른 프로그램이 카메라를 이미 사용하고 있어요.";
+    fix = "줌, OBS 같은 다른 화상 프로그램을 종료한 뒤 다시 시도해주세요.";
   } else {
-    why = "알 수 없는 이유로 실패했습니다.";
-    fix = "아래 진단 내용을 알려주시면 원인을 찾아드릴게요.";
+    why = "카메라를 켜는 중에 문제가 생겼어요.";
+    fix = "페이지를 새로고침하거나 다른 브라우저로 시도해보세요.";
   }
 
   msg.innerHTML =
-    "<h3>카메라를 켤 수 없습니다</h3>" +
+    "<h3>카메라를 켤 수 없어요</h3>" +
     "<div>" + why + "</div>" +
     "<div class='mt'>" + fix + "</div>" +
-    "<div class='mt-lg'>가장 확실한 방법은 이 파일이 있는 폴더에서 터미널로 " +
-    "<code>python3 -m http.server 8000</code> 을 실행한 뒤 " +
-    "<code>http://localhost:8000/</code> 로 접속하는 것입니다.</div>" +
-    "<div class='diag'>protocol: " + p +
-    "<br>secureContext: " + sec +
-    "<br>mediaDevices API: " + api +
-    "<br>error: " + (err ? (err.name + " — " + (err.message||"")) : "none") +
-    "<br>ua: " + navigator.userAgent.slice(0,90) + "</div>" +
     "<button id='msgx'>닫기</button>";
   msg.style.display = "block";
   document.getElementById("msgx").onclick = function(){ msg.style.display = "none"; };
