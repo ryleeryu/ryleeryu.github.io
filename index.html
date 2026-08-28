@@ -183,6 +183,13 @@
     <li>오른쪽 아래 <b>?</b> 버튼에서 전체 단축키 확인 가능</li>
   </ul>
 
+  <h2>배경색</h2>
+  <ul>
+    <li><b>화이트</b> — 어떤 화면에도 무난하게 어울리는 기본 배경</li>
+    <li><b>블루</b> — 파란색은 집중력과 기억력 향상에 도움이 된다고 알려진 색으로, 학습·암기 세션에 추천</li>
+  </ul>
+  <p><b>BG</b> 버튼으로 언제든 전환할 수 있고, 배경마다 다이얼 색상도 자동으로 맞춰져 어느 쪽이든 또렷하게 보입니다.</p>
+
   <h2>뽀모도로 기법이란?</h2>
   <p>1980년대 프란체스코 시릴로가 고안한 시간관리 기법으로, 25분 집중과
   5분 휴식을 반복해 짧은 리듬으로 몰입을 유지하는 방식입니다. Pomo Cam은
@@ -202,12 +209,13 @@
 var DW = 1920, DH = 1080;
 var CX = -269, CY = 540, R = 829;
 var SPAN = 30;
-var ARC = "#DCDCD7";
-var DOT_FAR = [196,196,191], DOT_NEAR = [26,26,24];
-var TXT_FAR = [168,168,162], TXT_NEAR = [26,26,24];
 var FONT = '"Helvetica Neue",Helvetica,Arial,"Segoe UI",sans-serif';
 
 var BGS = [["WHITE","#FFFFFF"],["BLUE","#0047BB"]];
+var PALETTES = [
+  { arc:"#DCDCD7", dotFar:[196,196,191], dotNear:[26,26,24],  txtFar:[168,168,162], txtNear:[26,26,24],  sub:"#8E8E86" },
+  { arc:"rgba(255,255,255,.4)", dotFar:[110,140,220], dotNear:[255,255,255], txtFar:[150,175,230], txtNear:[255,255,255], sub:"rgba(255,255,255,.65)" }
+];
 var SCRIMS = [["SOFT",0.35],["STRONG",0.65],["OFF",0]];
 var bgi = 0, sci = 0;
 
@@ -351,9 +359,11 @@ function draw(){
   ctx.rect(0,0,DW,DH);
   ctx.clip();
 
+  var pal = PALETTES[bgi];
+
   ctx.beginPath();
   ctx.arc(CX, CY, R, 0, Math.PI*2);
-  ctx.strokeStyle = ARC;
+  ctx.strokeStyle = pal.arc;
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
@@ -369,7 +379,7 @@ function draw(){
 
     ctx.beginPath();
     ctx.arc(x, y, 6 + 12*w, 0, Math.PI*2);
-    ctx.fillStyle = rgb(DOT_FAR, DOT_NEAR, w);
+    ctx.fillStyle = rgb(pal.dotFar, pal.dotNear, w);
     ctx.fill();
 
     var fs = 30 + 48*w;
@@ -377,7 +387,7 @@ function draw(){
     ctx.translate(x + 40 + 26*w, y);
     ctx.rotate(p*0.5*(1-w)*Math.PI/180);
     ctx.font = (w > 0.55 ? "700 " : "400 ") + fs.toFixed(1) + "px " + FONT;
-    ctx.fillStyle = rgb(TXT_FAR, TXT_NEAR, w);
+    ctx.fillStyle = rgb(pal.txtFar, pal.txtNear, w);
     track(SEGS[i].name, 0, 0, fs*0.035);
 
     if (showCd && SEGS[i].timer){
@@ -385,7 +395,7 @@ function draw(){
       if (op > 0.01){
         ctx.globalAlpha = op;
         ctx.font = "400 27px " + FONT;
-        ctx.fillStyle = "#8E8E86";
+        ctx.fillStyle = pal.sub;
         track(fmt(Math.max(0, SEGS[i].e - t)) + " REMAINING", 3, 62, 4);
         ctx.globalAlpha = 1;
       }
