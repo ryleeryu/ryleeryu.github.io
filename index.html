@@ -400,11 +400,12 @@ try { soundOn = localStorage.getItem("pomocam_sound_off") !== "1"; } catch(e){}
 sndB.textContent = "SOUND: " + (soundOn ? "ON" : "OFF");
 sndB.classList.toggle("off", !soundOn);
 
+var SOUND_LEAD = 0.2;
 function segIndexAt(tt){
   for (var i=0;i<N;i++){ if (tt < SEGS[i].e - 1e-6) return i; }
   return N-1;
 }
-var lastSegIdx = segIndexAt(0);
+var lastSegIdx = segIndexAt(SOUND_LEAD);
 
 function playChime(){
   if (!soundOn) return;
@@ -425,7 +426,7 @@ function frame(ts){
     t = Math.min(TOTAL, t + (ts-last)/1000*speed);
     last = ts;
     if (t >= TOTAL){ going = false; runB.textContent = "BEGIN"; }
-    var idx = segIndexAt(t);
+    var idx = segIndexAt(t + SOUND_LEAD);
     if (idx !== lastSegIdx){ playChime(); lastSegIdx = idx; }
   }
   draw();
@@ -440,7 +441,7 @@ function toggle(){
   going = !going; last = 0;
   runB.textContent = going ? "PAUSE" : "BEGIN";
 }
-function reset(){ going = false; t = 0; last = 0; lastSegIdx = segIndexAt(0); runB.textContent = "BEGIN"; }
+function reset(){ going = false; t = 0; last = 0; lastSegIdx = segIndexAt(SOUND_LEAD); runB.textContent = "BEGIN"; }
 
 function stopCam(){
   if (stream){ stream.getTracks().forEach(function(tr){ tr.stop(); }); stream = null; }
