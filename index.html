@@ -505,8 +505,8 @@ function stopCam(){
 
 /* ---------- 타임랩스 ---------- */
 
-var CAPW = Math.round(num("capw", 1280));
-var CAPH = Math.round(CAPW * 9 / 16);
+var BASE_LONG = Math.round(num("capw", 1280));
+var CAPW = BASE_LONG, CAPH = Math.round(BASE_LONG * 9 / 16);
 var IV = num("iv", 2) * 1000;
 var OFPS = num("ofps", 30);
 var MAXF = Math.round(num("maxf", 4000));
@@ -515,6 +515,17 @@ var frames = [], recOn = false, lastCap = 0, capBusy = false, exporting = false;
 var capCv = document.createElement("canvas");
 capCv.width = CAPW; capCv.height = CAPH;
 var capCtx = capCv.getContext("2d");
+
+function updateCapSize(){
+  if (PORTRAIT){
+    CAPH = BASE_LONG;
+    CAPW = Math.max(2, Math.round(BASE_LONG * (vw / vh)));
+  } else {
+    CAPW = BASE_LONG;
+    CAPH = Math.max(2, Math.round(BASE_LONG * 9 / 16));
+  }
+  capCv.width = CAPW; capCv.height = CAPH;
+}
 
 function estim(){
   var secs = frames.length / OFPS;
@@ -533,7 +544,11 @@ function grab(){
   if (capBusy || exporting) return;
   capBusy = true;
   var dpr = cv.width / vw;
-  capCtx.drawImage(cv, ox*dpr, oy*dpr, DW*S*dpr, DH*S*dpr, 0, 0, CAPW, CAPH);
+  if (PORTRAIT){
+    capCtx.drawImage(cv, 0, 0, cv.width, cv.height, 0, 0, CAPW, CAPH);
+  } else {
+    capCtx.drawImage(cv, ox*dpr, oy*dpr, DW*S*dpr, DH*S*dpr, 0, 0, CAPW, CAPH);
+  }
   capCv.toBlob(function(b){
     capBusy = false;
     if (!b || !recOn) return;
@@ -550,6 +565,7 @@ function grab(){
 function toggleRec(){
   if (exporting) return;
   recOn = !recOn;
+  if (recOn && frames.length === 0) updateCapSize();
   lastCap = 0;
   refreshRec();
 }
