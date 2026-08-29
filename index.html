@@ -11,6 +11,9 @@
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="google-adsense-account" content="ca-pub-4700980396851252">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4700980396851252" crossorigin="anonymous"></script>
 <style>
@@ -170,13 +173,11 @@
 
 <section id="about">
   <h1>Pomo Cam</h1>
-  <p class="tag">뽀모도로 타이머 겸 카메라 오버레이 · 타임랩스 녹화</p>
+  <p class="tag">뽀모도로 타이머 겸 나의 집중 모먼트 기록!</p>
 
   <p>Pomo Cam은 25분 집중 + 5분 휴식을 두 번 도는 뽀모도로 사이클을
   화면 전체를 채우는 큰 다이얼로 보여주는 무료 웹 도구입니다. 브라우저만
-  있으면 설치 없이 바로 쓸 수 있고, 배경을 초록/파랑 크로마키로 깔아
-  방송·편집용 오버레이로 쓰거나 직접 웹캠을 배경으로 띄워 작업 모습을
-  그대로 녹화할 수 있습니다.</p>
+  있으면 설치 없이 바로 쓸 수 있고, 원하는 배경을 선택하여 사용할 수 있습니다.</p>
 
   <h2>주요 기능</h2>
   <ul>
@@ -194,12 +195,13 @@
     <li>오른쪽 아래 <b>?</b> 버튼에서 전체 단축키 확인 가능</li>
   </ul>
 
-  <h2>배경색</h2>
+  <h2>배경</h2>
   <ul>
     <li><b>화이트</b> — 어떤 화면에도 무난하게 어울리는 기본 배경</li>
-    <li><b>블루</b> — 파란색은 집중력과 기억력 향상에 도움이 된다고 알려진 색으로, 학습·암기 세션에 추천</li>
+    <li><b>블루</b> — 집중력과 기억력 향상에 도움이 된다고 알려진 색으로, 학습·암기 세션에 추천</li>
+    <li><b>웹캠</b> — 타이머에 맞추어 작업 모습을 그대로 녹화</li>
   </ul>
-  <p><b>BG</b> 버튼으로 언제든 전환할 수 있고, 배경마다 다이얼 색상도 자동으로 맞춰져 어느 쪽이든 또렷하게 보입니다.</p>
+  <p><b>BG</b> 버튼으로 언제든 전환할 수 있습니다.</p>
 
   <h2>뽀모도로 기법이란?</h2>
   <p>1980년대 프란체스코 시릴로가 고안한 시간관리 기법으로, 25분 집중과
@@ -744,8 +746,27 @@ function cycleBg(){
 }
 function toggleCd(){ showCd = !showCd; cdB.textContent = "COUNTDOWN: " + (showCd?"ON":"OFF"); }
 function fullscreen(){
-  if (document.fullscreenElement) document.exitFullscreen();
-  else document.documentElement.requestFullscreen();
+  var el = document.documentElement;
+  var fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+  if (fsEl){
+    var exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (exit) exit.call(document);
+    return;
+  }
+  var req = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitRequestFullScreen || el.msRequestFullscreen;
+  if (!req){
+    note("<h3>전체화면을 지원하지 않는 브라우저예요</h3>" +
+         "<div>아이폰 사파리는 웹페이지 전체화면 기능 자체를 지원하지 않아요.</div>" +
+         "<div class='mt'>대신 공유 버튼에서 '홈 화면에 추가'를 하면 주소창 없이 앱처럼 꽉 채워 쓸 수 있어요.</div>");
+    return;
+  }
+  var p = req.call(el);
+  if (p && p.catch){
+    p.catch(function(){
+      note("<h3>전체화면 전환에 실패했어요</h3>" +
+           "<div>브라우저에서 전체화면 권한이 막혀 있을 수 있어요.</div>");
+    });
+  }
 }
 
 runB.onclick = toggle; rstB.onclick = reset; camB.onclick = toggleCam;
