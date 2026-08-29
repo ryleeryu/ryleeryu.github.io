@@ -46,6 +46,18 @@
       animation:recblink 1.1s ease-in-out infinite}
   @keyframes recblink{0%,100%{opacity:1}50%{opacity:.25}}
 
+  /* camera zoom / focus feedback */
+  #zoomhud{position:fixed;left:50%;top:58px;transform:translateX(-50%);z-index:5;
+      padding:6px 14px;border-radius:20px;background:var(--bar-bg);color:#fff;
+      font:700 13px/1 var(--font);letter-spacing:1px;opacity:0;pointer-events:none;
+      transition:opacity .25s;user-select:none}
+  #zoomhud.show{opacity:1}
+  #focusring{position:fixed;width:64px;height:64px;margin:-32px 0 0 -32px;z-index:5;
+      border:2px solid #fff;border-radius:50%;pointer-events:none;
+      box-shadow:0 0 0 1px rgba(0,0,0,.35);opacity:0;transform:scale(1.4);
+      transition:opacity .25s,transform .25s}
+  #focusring.show{opacity:1;transform:scale(1)}
+
   /* message / dialog box */
   #msg{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);max-width:620px;
       padding:26px 30px;background:var(--panel-bg);color:#fff;border-radius:10px;
@@ -116,6 +128,8 @@
   <audio id="chime" src="sound/dial-transition.m4a" preload="auto"></audio>
 
   <div id="recdot" role="status" aria-label="녹화 중"><span class="dot"></span>REC</div>
+  <div id="zoomhud" aria-hidden="true"></div>
+  <div id="focusring" aria-hidden="true"></div>
 
   <!-- 광고 자리: 승인 후 아래를 실제 <ins class="adsbygoogle"> 유닛으로 교체. ?ads=0 으로 숨김 (OBS 오버레이용) -->
   <aside id="ad" aria-label="광고">
@@ -347,6 +361,7 @@ function track(text, x, y, tr){
 
 var t = 0, going = false, last = 0, speed = 1, showCd = true;
 var stream = null, camOn = false, mirror = false, cams = [], camIdx = 0;
+var camTrack = null, camGeom = null, zoomCaps = null, curDeviceId = null;
 
 function drawCamera(){
   var sw = vid.videoWidth, sh = vid.videoHeight;
@@ -354,6 +369,7 @@ function drawCamera(){
   var sc = Math.max(vw/sw, vh/sh);
   var dw = sw*sc, dh = sh*sc;
   var dx = (vw-dw)/2, dy = (vh-dh)/2;
+  camGeom = { sw:sw, sh:sh, dw:dw, dh:dh, dx:dx, dy:dy };
   ctx.save();
   if (mirror){ ctx.translate(vw, 0); ctx.scale(-1, 1); }
   ctx.drawImage(vid, dx, dy, dw, dh);
@@ -439,7 +455,8 @@ var runB = document.getElementById("run"), rstB = document.getElementById("rst")
     recB = document.getElementById("rec"), savB = document.getElementById("sav"),
     clrB = document.getElementById("clr"), helpB = document.getElementById("help"),
     legend = document.getElementById("legend"), chime = document.getElementById("chime"),
-    recDot = document.getElementById("recdot");
+    recDot = document.getElementById("recdot"),
+    zoomhud = document.getElementById("zoomhud"), focusring = document.getElementById("focusring");
 
 /* ---------- 세션 전환 효과음 ---------- */
 
@@ -499,6 +516,7 @@ function reset(){ going = false; t = 0; last = 0; lastSegIdx = segIndexAt(SOUND_
 function stopCam(){
   if (stream){ stream.getTracks().forEach(function(tr){ tr.stop(); }); stream = null; }
   vid.srcObject = null; camOn = false;
+  camTrack = null; zoomCaps = null; camGeom = null;
   camB.textContent = "CAMERA: OFF";
   mirB.classList.add("off"); scrB.classList.add("off");
 }
@@ -679,14 +697,22 @@ function diagnose(err){
   document.getElementById("msgx").onclick = function(){ msg.style.display = "none"; };
 }
 
+function idealCamSize(){
+  var portrait = window.innerHeight > window.innerWidth;
+  return portrait ? { w:1080, h:1920, ar:9/16 } : { w:1920, h:1080, ar:16/9 };
+}
+
 function startCam(deviceId){
   msg.style.display = "none";
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     camB.textContent = "CAMERA: BLOCKED"; diagnose(null); return;
   }
-  var cons = { video: deviceId ? { deviceId:{ exact:deviceId }, width:{ ideal:1920 } }
-                              : { facingMode:{ ideal:"user" }, width:{ ideal:1920 }, height:{ ideal:1080 } },
-               audio: false };
+  curDeviceId = deviceId || null;
+  var size = idealCamSize();
+  var videoSpec = deviceId
+    ? { deviceId:{ exact:deviceId }, width:{ ideal:size.w }, height:{ ideal:size.h }, aspectRatio:{ ideal:size.ar } }
+    : { facingMode:{ ideal:"user" }, width:{ ideal:size.w }, height:{ ideal:size.h }, aspectRatio:{ ideal:size.ar } };
+  var cons = { video: videoSpec, audio: false };
   camB.textContent = "CAMERA: …";
   navigator.mediaDevices.getUserMedia(cons).then(function(s){
     if (stream) stream.getTracks().forEach(function(tr){ tr.stop(); });
@@ -695,6 +721,11 @@ function startCam(deviceId){
     camB.textContent = "CAMERA: ON";
     mirB.classList.toggle("off", !mirror);
     scrB.classList.toggle("off", SCRIMS[sci][1] === 0);
+    camTrack = s.getVideoTracks()[0] || null;
+    zoomCaps = null;
+    if (camTrack && camTrack.getCapabilities){
+      try { var caps = camTrack.getCapabilities(); if (caps.zoom) zoomCaps = caps.zoom; } catch(e){}
+    }
     return navigator.mediaDevices.enumerateDevices();
   }).then(function(list){
     if (list) cams = list.filter(function(d){ return d.kind === "videoinput"; });
@@ -711,6 +742,84 @@ function nextCam(){
   camIdx = (camIdx+1) % cams.length;
   startCam(cams[camIdx].deviceId);
 }
+
+var camResizeT;
+window.addEventListener("resize", function(){
+  if (!camOn) return;
+  clearTimeout(camResizeT);
+  camResizeT = setTimeout(function(){ startCam(curDeviceId); }, 500);
+});
+
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+function applyZoom(z){
+  if (!camTrack || !zoomCaps) return;
+  z = clamp(z, zoomCaps.min, zoomCaps.max);
+  camTrack.applyConstraints({ advanced:[{ zoom:z }] }).then(function(){
+    showZoomHud(z);
+  }).catch(function(){});
+}
+
+var zoomHudT;
+function showZoomHud(z){
+  zoomhud.textContent = z.toFixed(1) + "×";
+  zoomhud.classList.add("show");
+  clearTimeout(zoomHudT);
+  zoomHudT = setTimeout(function(){ zoomhud.classList.remove("show"); }, 900);
+}
+
+var pinchDist = null, pinchZoom = null;
+function touchDist(t0, t1){
+  var dx = t0.clientX - t1.clientX, dy = t0.clientY - t1.clientY;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+cv.addEventListener("touchstart", function(e){
+  if (!camOn || !zoomCaps || e.touches.length !== 2) return;
+  pinchDist = touchDist(e.touches[0], e.touches[1]);
+  var settings = camTrack.getSettings ? camTrack.getSettings() : {};
+  pinchZoom = settings.zoom || zoomCaps.min;
+}, { passive:true });
+cv.addEventListener("touchmove", function(e){
+  if (!camOn || !zoomCaps || pinchDist == null || e.touches.length !== 2) return;
+  var d = touchDist(e.touches[0], e.touches[1]);
+  applyZoom(pinchZoom * (d / pinchDist));
+}, { passive:true });
+cv.addEventListener("touchend", function(e){
+  if (e.touches.length < 2) pinchDist = null;
+}, { passive:true });
+
+var focusRingT;
+function showFocusRing(x, y){
+  focusring.style.left = x + "px";
+  focusring.style.top = y + "px";
+  focusring.classList.remove("show");
+  void focusring.offsetWidth;
+  focusring.classList.add("show");
+  clearTimeout(focusRingT);
+  focusRingT = setTimeout(function(){ focusring.classList.remove("show"); }, 700);
+}
+
+function tryFocusAt(cx, cy){
+  if (!camTrack || !camTrack.getCapabilities || !camGeom) return;
+  var caps;
+  try { caps = camTrack.getCapabilities(); } catch(e){ return; }
+  if (!caps.pointsOfInterest) return;
+  var vx = mirror ? (vw - cx) : cx;
+  var nx = (vx - camGeom.dx) / camGeom.dw;
+  var ny = (cy - camGeom.dy) / camGeom.dh;
+  if (nx < 0 || nx > 1 || ny < 0 || ny > 1) return;
+  var advanced = [{ pointsOfInterest:[{ x:nx, y:ny }] }];
+  if (caps.focusMode && caps.focusMode.indexOf("single-shot") >= 0) advanced.push({ focusMode:"single-shot" });
+  camTrack.applyConstraints({ advanced:advanced }).catch(function(){});
+}
+
+cv.addEventListener("click", function(e){
+  if (!camOn) return;
+  var rect = cv.getBoundingClientRect();
+  var cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+  showFocusRing(cx, cy);
+  tryFocusAt(cx, cy);
+});
 function toggleMirror(){
   mirror = !mirror;
   mirB.classList.toggle("off", !mirror);
