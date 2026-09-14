@@ -29,15 +29,19 @@
   canvas{display:block;width:100vw;height:100vh}
   video{display:none}
 
-  /* ad slot */
-  #ad{position:fixed;left:0;right:0;top:0;height:44px;z-index:4;
-      display:flex;align-items:center;justify-content:center;gap:8px;
-      background:var(--bar-bg);color:rgba(255,255,255,.55);
-      font:500 10px/1 var(--font);letter-spacing:1.5px;user-select:none}
-  #ad .ad-close{position:absolute;right:10px;top:50%;transform:translateY(-50%);
-      opacity:.6;cursor:pointer;font-size:14px;line-height:1;padding:4px}
+  /* ad slot — lives inline within the About section's real text content,
+     never on the content-free canvas screen (AdSense policy: ads need
+     publisher content on the same screen) */
+  #ad{position:relative;margin:32px 0;padding:18px;min-height:90px;
+      border-radius:8px;background:rgba(0,0,0,.04);
+      display:flex;align-items:center;justify-content:center;
+      font:500 10px/1 var(--font);letter-spacing:1.5px;color:rgba(0,0,0,.35);user-select:none}
+  #ad .ad-close{position:absolute;right:10px;top:10px;
+      opacity:.4;cursor:pointer;font-size:15px;line-height:1;padding:4px;color:#333}
   #ad .ad-close:hover{opacity:1}
   body.no-ad #ad{display:none}
+  body.theme-blue #ad{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4)}
+  body.theme-blue #ad .ad-close{color:#fff}
 
   /* recording indicator */
   #recdot{position:fixed;top:58px;right:18px;z-index:4;display:none;
@@ -119,11 +123,6 @@
   <audio id="chime" src="sound/dial-transition.m4a" preload="auto"></audio>
 
   <div id="recdot" role="status" aria-label="녹화 중"><span class="dot"></span>REC</div>
-
-  <!-- 광고 자리: 승인 후 아래를 실제 <ins class="adsbygoogle"> 유닛으로 교체. ?ads=0 으로 숨김 (OBS 오버레이용) -->
-  <aside id="ad" aria-label="광고">
-    <span class="ad-close" id="adx" title="숨기기">&times;</span>
-  </aside>
 
   <div id="msg" role="status" aria-live="polite"></div>
 
@@ -209,6 +208,12 @@
   5분 휴식을 반복해 짧은 리듬으로 몰입을 유지하는 방식입니다. Pomo Cam은
   이 리듬을 초 단위로 정확히 재생하면서, 동시에 그 시간의 흐름을
   타임랩스 영상으로 남길 수 있게 만들었습니다.</p>
+
+  <!-- 광고 자리: 실제 텍스트 콘텐츠 안에 배치 (콘텐츠 없는 화면에 광고 게재 금지 정책 대응).
+       승인 후 아래를 실제 <ins class="adsbygoogle"> 유닛으로 교체하세요. -->
+  <aside id="ad" aria-label="광고">
+    <span class="ad-close" id="adx" title="숨기기">&times;</span>
+  </aside>
 
   <footer>
     <span data-i18n="footerText">Pomo Cam은 광고 수익으로 무료로 운영됩니다.</span>
