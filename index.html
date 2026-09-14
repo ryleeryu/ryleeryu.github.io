@@ -99,8 +99,14 @@
   #about h1{font-size:26px;line-height:1.3;margin:0 0 8px;letter-spacing:-.2px}
   #about .tag{color:#888;font-size:14px;margin:0 0 40px}
   #about h2{font-size:16px;line-height:1.4;margin:36px 0 10px;letter-spacing:.2px}
+  #about h3{font-family:var(--font);font-weight:700;color:#111;
+      font-size:14.5px;line-height:1.4;margin:22px 0 6px}
   #about ul{margin:0;padding-left:20px}
   #about li{margin:4px 0}
+  #about .faq p{margin:0 0 4px}
+  #about code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:4px;
+      font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  body.theme-blue #about code{background:rgba(255,255,255,.15)}
   #about footer{margin-top:56px;padding-top:20px;border-top:1px solid #eee;
       font-size:13px;color:#999}
   #about footer a{color:#666}
@@ -109,7 +115,8 @@
   body.theme-blue{color:rgba(255,255,255,.9)}
   body.theme-blue #about{color:rgba(255,255,255,.9)}
   body.theme-blue #about h1,
-  body.theme-blue #about h2{color:#fff}
+  body.theme-blue #about h2,
+  body.theme-blue #about h3{color:#fff}
   body.theme-blue #about .tag{color:rgba(255,255,255,.65)}
   body.theme-blue #about footer{border-top-color:rgba(255,255,255,.25);color:rgba(255,255,255,.6)}
   body.theme-blue #about footer a{color:#fff}
@@ -214,6 +221,42 @@
   이 리듬을 초 단위로 정확히 재생하면서, 동시에 그 시간의 흐름을
   타임랩스 영상으로 남길 수 있게 만들었습니다.</p>
 
+  <h2 data-i18n="pomoWhyH2">뽀모도로가 효과적인 이유</h2>
+  <p data-i18n="pomoWhyP">25분은 임의로 정한 숫자가 아닙니다. 사람의 집중력은 평균 20~30분 주기로
+  자연스럽게 오르내리는데(울트라디안 리듬), 이 흐름에 맞춰 짧게 끊어 쉬면 뇌가 덜 지치면서도
+  몰입 상태를 반복해서 만들어낼 수 있습니다. 또한 '끝나는 시점이 정해져 있다'는 사실 자체가
+  집중력을 끌어올리는데, 이는 파킨슨의 법칙(일은 주어진 시간만큼 늘어난다)을 거꾸로 이용하는
+  셈입니다.</p>
+
+  <h2 data-i18n="tipsH2">실전 활용 팁</h2>
+  <ul>
+    <li data-i18n="tips1">세션 시작 전에 할 일을 한 문장으로 적어두면 몰입이 빨라집니다</li>
+    <li data-i18n="tips2">알림을 끄고 휴대폰을 화면 밖에 두는 것만으로도 방해 요소의 대부분이 사라집니다</li>
+    <li data-i18n="tips3">5분 휴식은 진짜로 쉬세요 — 다른 화면을 보는 대신 스트레칭이나 물 마시기를 추천합니다</li>
+    <li data-i18n="tips4">세션이 끝났는데 흐름이 끊기기 아쉬우면, 그대로 이어가도 괜찮습니다. 타이머는 도구일 뿐 규칙이 아닙니다</li>
+    <li data-i18n="tips5" data-i18n-html="1">집중이 잘 안 되는 날은 25분 대신 15분으로 시작해서 감을 잡아보세요 (주소 끝에 <code>?s1=15</code> 추가)</li>
+  </ul>
+
+  <h2 data-i18n="faqH2">자주 묻는 질문</h2>
+  <div class="faq">
+    <h3 data-i18n="faqQ1">왜 하필 25분인가요?</h3>
+    <p data-i18n="faqA1" data-i18n-html="1">프란체스코 시릴로가 처음 정한 기준이자, 대부분의 사람이 무리 없이 몰입을
+    유지할 수 있는 경험적 최적값입니다. 더 길게 또는 짧게 쓰고 싶다면 주소 끝에
+    <code>?s1=분</code> 같은 파라미터를 붙여 자유롭게 조절할 수 있습니다.</p>
+
+    <h3 data-i18n="faqQ2">타임랩스 영상은 어디에 저장되나요?</h3>
+    <p data-i18n="faqA2">서버로 전송되지 않습니다. 영상은 브라우저 안에서 만들어져 사용자 기기로
+    바로 다운로드되고, Pomo Cam은 그 영상을 보관하거나 열람하지 않습니다.</p>
+
+    <h3 data-i18n="faqQ3">카메라를 켜면 어딘가로 방송되나요?</h3>
+    <p data-i18n="faqA3">아니요. 카메라 화면은 이 페이지 안에서만 보이고, 직접 녹화해서 저장하지
+    않는 한 어디에도 남지 않습니다.</p>
+
+    <h3 data-i18n="faqQ4">쉬는 시간엔 뭘 해야 하나요?</h3>
+    <p data-i18n="faqA4">화면에서 눈을 떼고 몸을 움직이는 걸 추천합니다. 물을 마시거나 스트레칭을
+    하거나 창밖을 보는 것만으로도 다음 세션의 집중도가 달라집니다.</p>
+  </div>
+
   <!-- 광고 자리 2: 실제 텍스트 콘텐츠 안에 배치 (콘텐츠 없는 화면에 광고 게재 금지 정책 대응).
        승인 후 아래를 실제 <ins class="adsbygoogle"> 유닛으로 교체하세요. -->
   <aside id="ad2" class="ad-slot" aria-label="광고">
@@ -257,6 +300,23 @@ var I18N = {
     bgP: "<b>BG</b> 버튼으로 언제든 전환할 수 있습니다.",
     pomoH2: "뽀모도로 기법이란?",
     pomoP: "1980년대 프란체스코 시릴로가 고안한 시간관리 기법으로, 25분 집중과 5분 휴식을 반복해 짧은 리듬으로 몰입을 유지하는 방식입니다. Pomo Cam은 이 리듬을 초 단위로 정확히 재생하면서, 동시에 그 시간의 흐름을 타임랩스 영상으로 남길 수 있게 만들었습니다.",
+    pomoWhyH2: "뽀모도로가 효과적인 이유",
+    pomoWhyP: "25분은 임의로 정한 숫자가 아닙니다. 사람의 집중력은 평균 20~30분 주기로 자연스럽게 오르내리는데(울트라디안 리듬), 이 흐름에 맞춰 짧게 끊어 쉬면 뇌가 덜 지치면서도 몰입 상태를 반복해서 만들어낼 수 있습니다. 또한 '끝나는 시점이 정해져 있다'는 사실 자체가 집중력을 끌어올리는데, 이는 파킨슨의 법칙(일은 주어진 시간만큼 늘어난다)을 거꾸로 이용하는 셈입니다.",
+    tipsH2: "실전 활용 팁",
+    tips1: "세션 시작 전에 할 일을 한 문장으로 적어두면 몰입이 빨라집니다",
+    tips2: "알림을 끄고 휴대폰을 화면 밖에 두는 것만으로도 방해 요소의 대부분이 사라집니다",
+    tips3: "5분 휴식은 진짜로 쉬세요 — 다른 화면을 보는 대신 스트레칭이나 물 마시기를 추천합니다",
+    tips4: "세션이 끝났는데 흐름이 끊기기 아쉬우면, 그대로 이어가도 괜찮습니다. 타이머는 도구일 뿐 규칙이 아닙니다",
+    tips5: "집중이 잘 안 되는 날은 25분 대신 15분으로 시작해서 감을 잡아보세요 (주소 끝에 <code>?s1=15</code> 추가)",
+    faqH2: "자주 묻는 질문",
+    faqQ1: "왜 하필 25분인가요?",
+    faqA1: "프란체스코 시릴로가 처음 정한 기준이자, 대부분의 사람이 무리 없이 몰입을 유지할 수 있는 경험적 최적값입니다. 더 길게 또는 짧게 쓰고 싶다면 주소 끝에 <code>?s1=분</code> 같은 파라미터를 붙여 자유롭게 조절할 수 있습니다.",
+    faqQ2: "타임랩스 영상은 어디에 저장되나요?",
+    faqA2: "서버로 전송되지 않습니다. 영상은 브라우저 안에서 만들어져 사용자 기기로 바로 다운로드되고, Pomo Cam은 그 영상을 보관하거나 열람하지 않습니다.",
+    faqQ3: "카메라를 켜면 어딘가로 방송되나요?",
+    faqA3: "아니요. 카메라 화면은 이 페이지 안에서만 보이고, 직접 녹화해서 저장하지 않는 한 어디에도 남지 않습니다.",
+    faqQ4: "쉬는 시간엔 뭘 해야 하나요?",
+    faqA4: "화면에서 눈을 떼고 몸을 움직이는 걸 추천합니다. 물을 마시거나 스트레칭을 하거나 창밖을 보는 것만으로도 다음 세션의 집중도가 달라집니다.",
     footerText: "Pomo Cam은 광고 수익으로 무료로 운영됩니다.",
     privacyLink: "개인정보처리방침",
     lgSpace: "재생 / 일시정지", lgR: "처음으로", lgT: "녹화 시작/정지", lgE: "영상으로 저장",
@@ -317,6 +377,23 @@ var I18N = {
     bgP: "Switch anytime with the <b>BG</b> button.",
     pomoH2: "What is the Pomodoro Technique?",
     pomoP: "A time-management method devised by Francesco Cirillo in the 1980s: repeating 25 minutes of focus and 5 minutes of rest keeps you in a short rhythm of deep work. Pomo Cam plays that rhythm out to the second, while letting you keep a timelapse record of the whole session.",
+    pomoWhyH2: "Why the Pomodoro Technique works",
+    pomoWhyP: "25 minutes isn't an arbitrary number. Human focus naturally rises and falls in roughly 20–30 minute cycles (an ultradian rhythm), and resting in short bursts along that rhythm lets your brain re-enter deep focus repeatedly without burning out. Knowing there's a fixed end point also sharpens concentration on its own — a kind of reverse Parkinson's Law (work expands to fill the time given, so a shorter fixed time compresses it back down).",
+    tipsH2: "Tips for getting the most out of it",
+    tips1: "Write down what you're about to do in one sentence before starting — it speeds up getting into focus",
+    tips2: "Turning off notifications and putting your phone out of sight removes most distractions on its own",
+    tips3: "Actually rest during the 5-minute break — stretch or get water instead of looking at another screen",
+    tips4: "If a session ends mid-flow and you don't want to stop, it's fine to keep going. The timer is a tool, not a rule",
+    tips5: "On a low-focus day, start with 15 minutes instead of 25 to build momentum (add <code>?s1=15</code> to the URL)",
+    faqH2: "Frequently asked questions",
+    faqQ1: "Why exactly 25 minutes?",
+    faqA1: "That's the number Francesco Cirillo originally settled on, and it's also an empirically comfortable length for most people to stay focused without strain. You can freely adjust it with a URL parameter like <code>?s1=minutes</code>.",
+    faqQ2: "Where does the timelapse video get saved?",
+    faqA2: "It's never sent to a server. The video is generated entirely inside your browser and downloaded directly to your device — Pomo Cam never stores or views it.",
+    faqQ3: "If I turn on the camera, does it broadcast anywhere?",
+    faqA3: "No. The camera feed is only visible on this page itself, and it isn't saved anywhere unless you record and save it yourself.",
+    faqQ4: "What should I do during the break?",
+    faqA4: "Look away from the screen and move your body. Getting water, stretching, or just looking out a window is enough to change how focused your next session feels.",
     footerText: "Pomo Cam is free, supported by ads.",
     privacyLink: "Privacy Policy",
     lgSpace: "Play / pause", lgR: "Restart", lgT: "Start/stop recording", lgE: "Save video",
