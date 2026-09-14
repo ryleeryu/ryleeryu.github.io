@@ -47,17 +47,18 @@
   #taskWrap{position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:4;
       width:min(420px, calc(100vw - 48px))}
   #task{width:100%;box-sizing:border-box;
-      background:rgba(255,255,255,.16);
-      -webkit-backdrop-filter:blur(20px) saturate(180%);
-      backdrop-filter:blur(20px) saturate(180%);
-      border:1px solid rgba(255,255,255,.35);
+      background:rgba(255,255,255,.06);
+      -webkit-backdrop-filter:blur(8px) saturate(140%);
+      backdrop-filter:blur(8px) saturate(140%);
+      border:1px solid rgba(255,255,255,.3);
       border-radius:20px;padding:10px 18px;text-align:center;
       font:500 13px/1 var(--font);letter-spacing:.3px;color:#1a1a1a;outline:none;
-      box-shadow:0 8px 24px rgba(0,0,0,.08), inset 0 1px 0 rgba(255,255,255,.4);
+      text-shadow:0 1px 3px rgba(255,255,255,.5);
+      box-shadow:0 6px 20px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.35);
       transition:background .2s,box-shadow .2s}
   #task::placeholder{color:rgba(0,0,0,.4)}
-  #task:focus{background:rgba(255,255,255,.28);
-      box-shadow:0 8px 28px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.5)}
+  #task:focus{background:rgba(255,255,255,.14);
+      box-shadow:0 6px 24px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,.45)}
 
   /* recording indicator */
   #recdot{position:fixed;top:58px;right:18px;z-index:4;display:none;
