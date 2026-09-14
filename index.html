@@ -43,6 +43,18 @@
   body.theme-blue .ad-slot{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4)}
   body.theme-blue .ad-slot .ad-close{color:#fff}
 
+  /* task input */
+  #taskWrap{position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:4;
+      width:min(420px, calc(100vw - 48px))}
+  #task{width:100%;box-sizing:border-box;background:rgba(0,0,0,.05);border:none;
+      border-radius:20px;padding:10px 18px;text-align:center;
+      font:500 13px/1 var(--font);letter-spacing:.3px;color:#333;outline:none}
+  #task::placeholder{color:rgba(0,0,0,.35)}
+  #task:focus{background:rgba(0,0,0,.08)}
+  body.theme-blue #task{background:rgba(255,255,255,.15);color:#fff}
+  body.theme-blue #task::placeholder{color:rgba(255,255,255,.55)}
+  body.theme-blue #task:focus{background:rgba(255,255,255,.22)}
+
   /* recording indicator */
   #recdot{position:fixed;top:58px;right:18px;z-index:4;display:none;
       align-items:center;gap:7px;padding:6px 12px;border-radius:20px;
@@ -104,9 +116,6 @@
   #about ul{margin:0;padding-left:20px}
   #about li{margin:4px 0}
   #about .faq p{margin:0 0 4px}
-  #about code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:4px;
-      font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
-  body.theme-blue #about code{background:rgba(255,255,255,.15)}
   #about footer{margin-top:56px;padding-top:20px;border-top:1px solid #eee;
       font-size:13px;color:#999}
   #about footer a{color:#666}
@@ -130,6 +139,10 @@
   <audio id="chime" src="sound/dial-transition.m4a" preload="auto"></audio>
 
   <div id="recdot" role="status" aria-label="녹화 중"><span class="dot"></span>REC</div>
+
+  <div id="taskWrap">
+    <input id="task" type="text" maxlength="60" autocomplete="off" placeholder="무엇에 집중할까요?">
+  </div>
 
   <div id="msg" role="status" aria-live="polite"></div>
 
@@ -221,32 +234,23 @@
   이 리듬을 초 단위로 정확히 재생하면서, 동시에 그 시간의 흐름을
   타임랩스 영상으로 남길 수 있게 만들었습니다.</p>
 
-  <h2 data-i18n="pomoWhyH2">뽀모도로가 효과적인 이유</h2>
-  <p data-i18n="pomoWhyP">25분은 임의로 정한 숫자가 아닙니다. 사람의 집중력은 평균 20~30분 주기로
-  자연스럽게 오르내리는데(울트라디안 리듬), 이 흐름에 맞춰 짧게 끊어 쉬면 뇌가 덜 지치면서도
-  몰입 상태를 반복해서 만들어낼 수 있습니다. 또한 '끝나는 시점이 정해져 있다'는 사실 자체가
-  집중력을 끌어올리는데, 이는 파킨슨의 법칙(일은 주어진 시간만큼 늘어난다)을 거꾸로 이용하는
-  셈입니다.</p>
-
   <h2 data-i18n="tipsH2">실전 활용 팁</h2>
   <ul>
     <li data-i18n="tips1">세션 시작 전에 할 일을 한 문장으로 적어두면 몰입이 빨라집니다</li>
     <li data-i18n="tips2">알림을 끄고 휴대폰을 화면 밖에 두는 것만으로도 방해 요소의 대부분이 사라집니다</li>
     <li data-i18n="tips3">5분 휴식은 진짜로 쉬세요 — 다른 화면을 보는 대신 스트레칭이나 물 마시기를 추천합니다</li>
     <li data-i18n="tips4">세션이 끝났는데 흐름이 끊기기 아쉬우면, 그대로 이어가도 괜찮습니다. 타이머는 도구일 뿐 규칙이 아닙니다</li>
-    <li data-i18n="tips5" data-i18n-html="1">집중이 잘 안 되는 날은 25분 대신 15분으로 시작해서 감을 잡아보세요 (주소 끝에 <code>?s1=15</code> 추가)</li>
   </ul>
 
   <h2 data-i18n="faqH2">자주 묻는 질문</h2>
   <div class="faq">
     <h3 data-i18n="faqQ1">왜 하필 25분인가요?</h3>
-    <p data-i18n="faqA1" data-i18n-html="1">프란체스코 시릴로가 처음 정한 기준이자, 대부분의 사람이 무리 없이 몰입을
-    유지할 수 있는 경험적 최적값입니다. 더 길게 또는 짧게 쓰고 싶다면 주소 끝에
-    <code>?s1=분</code> 같은 파라미터를 붙여 자유롭게 조절할 수 있습니다.</p>
+    <p data-i18n="faqA1">프란체스코 시릴로가 처음 정한 기준이자, 대부분의 사람이 무리 없이 몰입을
+    유지할 수 있는 경험적 최적값입니다. 더 길게 또는 짧게 쓰고 싶다면 업데이트를 기다려주세요 :)</p>
 
     <h3 data-i18n="faqQ2">타임랩스 영상은 어디에 저장되나요?</h3>
-    <p data-i18n="faqA2">서버로 전송되지 않습니다. 영상은 브라우저 안에서 만들어져 사용자 기기로
-    바로 다운로드되고, Pomo Cam은 그 영상을 보관하거나 열람하지 않습니다.</p>
+    <p data-i18n="faqA2">영상은 사용자 기기로 바로 다운로드되고, Pomo Cam 서버로 전송되지 않습니다.
+    영상을 보관하거나 열람하지 않으니 걱정 마세요!</p>
 
     <h3 data-i18n="faqQ3">카메라를 켜면 어딘가로 방송되나요?</h3>
     <p data-i18n="faqA3">아니요. 카메라 화면은 이 페이지 안에서만 보이고, 직접 녹화해서 저장하지
@@ -300,19 +304,16 @@ var I18N = {
     bgP: "<b>BG</b> 버튼으로 언제든 전환할 수 있습니다.",
     pomoH2: "뽀모도로 기법이란?",
     pomoP: "1980년대 프란체스코 시릴로가 고안한 시간관리 기법으로, 25분 집중과 5분 휴식을 반복해 짧은 리듬으로 몰입을 유지하는 방식입니다. Pomo Cam은 이 리듬을 초 단위로 정확히 재생하면서, 동시에 그 시간의 흐름을 타임랩스 영상으로 남길 수 있게 만들었습니다.",
-    pomoWhyH2: "뽀모도로가 효과적인 이유",
-    pomoWhyP: "25분은 임의로 정한 숫자가 아닙니다. 사람의 집중력은 평균 20~30분 주기로 자연스럽게 오르내리는데(울트라디안 리듬), 이 흐름에 맞춰 짧게 끊어 쉬면 뇌가 덜 지치면서도 몰입 상태를 반복해서 만들어낼 수 있습니다. 또한 '끝나는 시점이 정해져 있다'는 사실 자체가 집중력을 끌어올리는데, 이는 파킨슨의 법칙(일은 주어진 시간만큼 늘어난다)을 거꾸로 이용하는 셈입니다.",
     tipsH2: "실전 활용 팁",
     tips1: "세션 시작 전에 할 일을 한 문장으로 적어두면 몰입이 빨라집니다",
     tips2: "알림을 끄고 휴대폰을 화면 밖에 두는 것만으로도 방해 요소의 대부분이 사라집니다",
     tips3: "5분 휴식은 진짜로 쉬세요 — 다른 화면을 보는 대신 스트레칭이나 물 마시기를 추천합니다",
     tips4: "세션이 끝났는데 흐름이 끊기기 아쉬우면, 그대로 이어가도 괜찮습니다. 타이머는 도구일 뿐 규칙이 아닙니다",
-    tips5: "집중이 잘 안 되는 날은 25분 대신 15분으로 시작해서 감을 잡아보세요 (주소 끝에 <code>?s1=15</code> 추가)",
     faqH2: "자주 묻는 질문",
     faqQ1: "왜 하필 25분인가요?",
-    faqA1: "프란체스코 시릴로가 처음 정한 기준이자, 대부분의 사람이 무리 없이 몰입을 유지할 수 있는 경험적 최적값입니다. 더 길게 또는 짧게 쓰고 싶다면 주소 끝에 <code>?s1=분</code> 같은 파라미터를 붙여 자유롭게 조절할 수 있습니다.",
+    faqA1: "프란체스코 시릴로가 처음 정한 기준이자, 대부분의 사람이 무리 없이 몰입을 유지할 수 있는 경험적 최적값입니다. 더 길게 또는 짧게 쓰고 싶다면 업데이트를 기다려주세요 :)",
     faqQ2: "타임랩스 영상은 어디에 저장되나요?",
-    faqA2: "서버로 전송되지 않습니다. 영상은 브라우저 안에서 만들어져 사용자 기기로 바로 다운로드되고, Pomo Cam은 그 영상을 보관하거나 열람하지 않습니다.",
+    faqA2: "영상은 사용자 기기로 바로 다운로드되고, Pomo Cam 서버로 전송되지 않습니다. 영상을 보관하거나 열람하지 않으니 걱정 마세요!",
     faqQ3: "카메라를 켜면 어딘가로 방송되나요?",
     faqA3: "아니요. 카메라 화면은 이 페이지 안에서만 보이고, 직접 녹화해서 저장하지 않는 한 어디에도 남지 않습니다.",
     faqQ4: "쉬는 시간엔 뭘 해야 하나요?",
@@ -323,6 +324,7 @@ var I18N = {
     lgV: "카메라 켜기/끄기", lgN: "카메라 전환", lgM: "좌우 반전", lgS: "스크림 밝기",
     lgB: "배경색", lgC: "타이머 표시", lgU: "효과음 켜기/끄기", lgF: "전체화면",
     ariaControls: "컨트롤", ariaAd: "광고", ariaRec: "녹화 중", ariaHelp: "단축키 안내", adClose: "숨기기",
+    taskPlaceholder: "무엇에 집중할까요?",
     closeBtn: "닫기",
     camErrTitle: "카메라를 켤 수 없어요",
     camNoApiWhy: "이 브라우저에서는 카메라 기능을 지원하지 않아요.",
@@ -377,19 +379,16 @@ var I18N = {
     bgP: "Switch anytime with the <b>BG</b> button.",
     pomoH2: "What is the Pomodoro Technique?",
     pomoP: "A time-management method devised by Francesco Cirillo in the 1980s: repeating 25 minutes of focus and 5 minutes of rest keeps you in a short rhythm of deep work. Pomo Cam plays that rhythm out to the second, while letting you keep a timelapse record of the whole session.",
-    pomoWhyH2: "Why the Pomodoro Technique works",
-    pomoWhyP: "25 minutes isn't an arbitrary number. Human focus naturally rises and falls in roughly 20–30 minute cycles (an ultradian rhythm), and resting in short bursts along that rhythm lets your brain re-enter deep focus repeatedly without burning out. Knowing there's a fixed end point also sharpens concentration on its own — a kind of reverse Parkinson's Law (work expands to fill the time given, so a shorter fixed time compresses it back down).",
     tipsH2: "Tips for getting the most out of it",
     tips1: "Write down what you're about to do in one sentence before starting — it speeds up getting into focus",
     tips2: "Turning off notifications and putting your phone out of sight removes most distractions on its own",
     tips3: "Actually rest during the 5-minute break — stretch or get water instead of looking at another screen",
     tips4: "If a session ends mid-flow and you don't want to stop, it's fine to keep going. The timer is a tool, not a rule",
-    tips5: "On a low-focus day, start with 15 minutes instead of 25 to build momentum (add <code>?s1=15</code> to the URL)",
     faqH2: "Frequently asked questions",
     faqQ1: "Why exactly 25 minutes?",
-    faqA1: "That's the number Francesco Cirillo originally settled on, and it's also an empirically comfortable length for most people to stay focused without strain. You can freely adjust it with a URL parameter like <code>?s1=minutes</code>.",
+    faqA1: "That's the number Francesco Cirillo originally settled on, and it's also an empirically comfortable length for most people to stay focused without strain. Support for adjusting it is coming in a future update :)",
     faqQ2: "Where does the timelapse video get saved?",
-    faqA2: "It's never sent to a server. The video is generated entirely inside your browser and downloaded directly to your device — Pomo Cam never stores or views it.",
+    faqA2: "The video downloads straight to your device — it's never sent to Pomo Cam's servers. We don't store or view it, so don't worry!",
     faqQ3: "If I turn on the camera, does it broadcast anywhere?",
     faqA3: "No. The camera feed is only visible on this page itself, and it isn't saved anywhere unless you record and save it yourself.",
     faqQ4: "What should I do during the break?",
@@ -400,6 +399,7 @@ var I18N = {
     lgV: "Camera on/off", lgN: "Switch camera", lgM: "Mirror", lgS: "Scrim brightness",
     lgB: "Background color", lgC: "Toggle timer", lgU: "Sound on/off", lgF: "Fullscreen",
     ariaControls: "Controls", ariaAd: "Advertisement", ariaRec: "Recording", ariaHelp: "Keyboard shortcuts", adClose: "Dismiss",
+    taskPlaceholder: "What are you focusing on?",
     closeBtn: "Close",
     camErrTitle: "Can't turn on the camera",
     camNoApiWhy: "This browser doesn't support camera access.",
@@ -657,7 +657,16 @@ var runB = document.getElementById("run"), rstB = document.getElementById("rst")
     recB = document.getElementById("rec"), savB = document.getElementById("sav"),
     clrB = document.getElementById("clr"), helpB = document.getElementById("help"),
     legend = document.getElementById("legend"), chime = document.getElementById("chime"),
-    recDot = document.getElementById("recdot"), langB = document.getElementById("lang");
+    recDot = document.getElementById("recdot"), langB = document.getElementById("lang"),
+    taskInput = document.getElementById("task");
+
+try {
+  var savedTask = localStorage.getItem("pomocam_task");
+  if (savedTask) taskInput.value = savedTask;
+} catch(e){}
+taskInput.addEventListener("input", function(){
+  try { localStorage.setItem("pomocam_task", taskInput.value); } catch(e){}
+});
 
 function applyLang(){
   document.documentElement.lang = uiLang;
@@ -686,6 +695,7 @@ function applyLang(){
     var el = document.getElementById(id);
     if (el) el.title = T("adClose");
   });
+  taskInput.placeholder = T("taskPlaceholder");
   langB.textContent = uiLang === "ko" ? "EN" : "KO";
 }
 function toggleLang(){
@@ -1022,6 +1032,7 @@ document.addEventListener("click", function(e){
 });
 
 document.addEventListener("keydown", function(e){
+  if (e.target === taskInput) return;
   var k = e.key.toLowerCase();
   if (e.code === "Space"){ e.preventDefault(); toggle(); }
   else if (k === "r") reset();
