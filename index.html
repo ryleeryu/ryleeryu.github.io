@@ -32,16 +32,16 @@
   /* ad slot — lives inline within the About section's real text content,
      never on the content-free canvas screen (AdSense policy: ads need
      publisher content on the same screen) */
-  #ad{position:relative;margin:32px 0;padding:18px;min-height:90px;
+  .ad-slot{position:relative;margin:32px 0;padding:18px;min-height:90px;
       border-radius:8px;background:rgba(0,0,0,.04);
       display:flex;align-items:center;justify-content:center;
       font:500 10px/1 var(--font);letter-spacing:1.5px;color:rgba(0,0,0,.35);user-select:none}
-  #ad .ad-close{position:absolute;right:10px;top:10px;
+  .ad-slot .ad-close{position:absolute;right:10px;top:10px;
       opacity:.4;cursor:pointer;font-size:15px;line-height:1;padding:4px;color:#333}
-  #ad .ad-close:hover{opacity:1}
-  body.no-ad #ad{display:none}
-  body.theme-blue #ad{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4)}
-  body.theme-blue #ad .ad-close{color:#fff}
+  .ad-slot .ad-close:hover{opacity:1}
+  body.no-ad .ad-slot{display:none}
+  body.theme-blue .ad-slot{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4)}
+  body.theme-blue .ad-slot .ad-close{color:#fff}
 
   /* recording indicator */
   #recdot{position:fixed;top:58px;right:18px;z-index:4;display:none;
@@ -195,6 +195,11 @@
     <li data-i18n="usage4" data-i18n-html="1">오른쪽 아래 <b>?</b> 버튼에서 전체 단축키 확인 가능</li>
   </ul>
 
+  <!-- 광고 자리 1: 실제 텍스트 콘텐츠 사이에 배치. 승인 후 아래를 실제 <ins class="adsbygoogle"> 유닛으로 교체하세요. -->
+  <aside id="ad1" class="ad-slot" aria-label="광고">
+    <span class="ad-close" id="adx1" title="숨기기">&times;</span>
+  </aside>
+
   <h2 data-i18n="bgH2">배경</h2>
   <ul>
     <li data-i18n="bg1" data-i18n-html="1"><b>화이트</b> — 어떤 화면에도 무난하게 어울리는 기본 배경</li>
@@ -209,10 +214,10 @@
   이 리듬을 초 단위로 정확히 재생하면서, 동시에 그 시간의 흐름을
   타임랩스 영상으로 남길 수 있게 만들었습니다.</p>
 
-  <!-- 광고 자리: 실제 텍스트 콘텐츠 안에 배치 (콘텐츠 없는 화면에 광고 게재 금지 정책 대응).
+  <!-- 광고 자리 2: 실제 텍스트 콘텐츠 안에 배치 (콘텐츠 없는 화면에 광고 게재 금지 정책 대응).
        승인 후 아래를 실제 <ins class="adsbygoogle"> 유닛으로 교체하세요. -->
-  <aside id="ad" aria-label="광고">
-    <span class="ad-close" id="adx" title="숨기기">&times;</span>
+  <aside id="ad2" class="ad-slot" aria-label="광고">
+    <span class="ad-close" id="adx2" title="숨기기">&times;</span>
   </aside>
 
   <footer>
@@ -374,11 +379,13 @@ function num(k, d){ var v = parseFloat(q.get(k)); return isFinite(v) && v > 0 ? 
   try { dismissed = localStorage.getItem("pomocam_ad_hide") === "1"; } catch(e){}
   if (q.get("ads") === "0" || dismissed) document.body.classList.add("no-ad");
   document.addEventListener("DOMContentLoaded", function(){
-    var x = document.getElementById("adx");
-    if (x) x.onclick = function(){
-      document.body.classList.add("no-ad");
-      try { localStorage.setItem("pomocam_ad_hide", "1"); } catch(e){}
-    };
+    ["adx1", "adx2"].forEach(function(id){
+      var x = document.getElementById(id);
+      if (x) x.onclick = function(){
+        document.body.classList.add("no-ad");
+        try { localStorage.setItem("pomocam_ad_hide", "1"); } catch(e){}
+      };
+    });
   });
 })();
 
@@ -592,10 +599,16 @@ function applyLang(){
   }
 
   ui.setAttribute("aria-label", T("ariaControls"));
-  document.getElementById("ad").setAttribute("aria-label", T("ariaAd"));
+  ["ad1", "ad2"].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.setAttribute("aria-label", T("ariaAd"));
+  });
   recDot.setAttribute("aria-label", T("ariaRec"));
   helpB.setAttribute("aria-label", T("ariaHelp"));
-  document.getElementById("adx").title = T("adClose");
+  ["adx1", "adx2"].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.title = T("adClose");
+  });
   langB.textContent = uiLang === "ko" ? "EN" : "KO";
 }
 function toggleLang(){
