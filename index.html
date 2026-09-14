@@ -43,30 +43,39 @@
   body.theme-blue .ad-slot{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4)}
   body.theme-blue .ad-slot .ad-close{color:#fff}
 
-  /* task input */
+  /* task input bar — glass pill holding the sound icon, the input, and (while
+     recording) the REC indicator, all as one row so nothing overlaps */
   #taskWrap{position:fixed;left:50%;top:24px;transform:translateX(-50%);z-index:4;
-      width:min(420px, calc(100vw - 48px))}
-  #task{width:100%;box-sizing:border-box;
+      width:min(420px, calc(100vw - 48px));
+      display:flex;align-items:center;gap:10px;box-sizing:border-box;
       background:rgba(255,255,255,.06);
       -webkit-backdrop-filter:blur(8px) saturate(140%);
       backdrop-filter:blur(8px) saturate(140%);
       border:1px solid rgba(255,255,255,.3);
-      border-radius:20px;padding:10px 18px;text-align:center;
-      font:500 13px/1 var(--font);letter-spacing:.3px;color:#1a1a1a;outline:none;
-      text-shadow:0 1px 3px rgba(255,255,255,.5);
+      border-radius:20px;padding:10px 16px;
       box-shadow:0 6px 20px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.35);
       transition:background .2s,box-shadow .2s}
-  #task::placeholder{color:rgba(0,0,0,.4)}
-  #task:focus{background:rgba(255,255,255,.14);
+  #taskWrap:focus-within{background:rgba(255,255,255,.14);
       box-shadow:0 6px 24px rgba(0,0,0,.1), inset 0 1px 0 rgba(255,255,255,.45)}
+  #task{flex:1;min-width:0;background:none;border:none;outline:none;
+      text-align:center;font:500 13px/1 var(--font);letter-spacing:.3px;
+      color:#1a1a1a;text-shadow:0 1px 3px rgba(255,255,255,.5)}
+  #task::placeholder{color:rgba(0,0,0,.4)}
 
-  /* recording indicator */
-  #recdot{position:fixed;top:58px;right:18px;z-index:4;display:none;
-      align-items:center;gap:7px;padding:6px 12px;border-radius:20px;
-      background:var(--bar-bg);color:#fff;
-      font:700 11px/1 var(--font);letter-spacing:1.5px;user-select:none}
+  /* sound icon — left end of the task bar */
+  #snd{flex:none;display:flex;background:none;border:none;padding:0;margin:0;
+      cursor:pointer;color:#1a1a1a;opacity:.7}
+  #snd:hover{opacity:1}
+  #snd.off{opacity:.4}
+  #snd .snd-mute{display:none}
+  #snd.off .snd-wave{display:none}
+  #snd.off .snd-mute{display:inline}
+
+  /* recording indicator — right end of the task bar, no pill of its own */
+  #recdot{flex:none;display:none;align-items:center;gap:6px;
+      font:700 11px/1 var(--font);letter-spacing:1px;color:#ff3b30}
   #recdot.show{display:flex}
-  #recdot .dot{width:8px;height:8px;border-radius:50%;background:#ff3b30;
+  #recdot .dot{width:7px;height:7px;border-radius:50%;background:#ff3b30;
       animation:recblink 1.1s ease-in-out infinite}
   @keyframes recblink{0%,100%{opacity:1}50%{opacity:.25}}
 
@@ -143,10 +152,16 @@
   <video id="v" playsinline muted></video>
   <audio id="chime" src="sound/dial-transition.m4a" preload="auto"></audio>
 
-  <div id="recdot" role="status" aria-label="녹화 중"><span class="dot"></span>REC</div>
-
   <div id="taskWrap">
+    <button id="snd" aria-label="효과음 켜기/끄기">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 9v6h4l5 5V4L8 9H4z"></path>
+        <path class="snd-wave" d="M16.5 8.5a5 5 0 0 1 0 7"></path>
+        <path class="snd-mute" d="M16 8l6 8M22 8l-6 8"></path>
+      </svg>
+    </button>
     <input id="task" type="text" maxlength="60" autocomplete="off" placeholder="무엇에 집중할까요?">
+    <div id="recdot" role="status" aria-label="녹화 중"><span class="dot"></span>REC</div>
   </div>
 
   <div id="msg" role="status" aria-live="polite"></div>
@@ -171,8 +186,6 @@
     <div class="dv"></div>
     <div class="grp">
       <button id="bg">BG: WHITE</button>
-      <button id="cd">COUNTDOWN: ON</button>
-      <button id="snd">SOUND: ON</button>
       <button id="fs">FULLSCREEN</button>
     </div>
     <div class="end">
@@ -188,7 +201,6 @@
         <dt>M</dt><dd data-i18n="lgM">좌우 반전</dd>
         <dt>S</dt><dd data-i18n="lgS">스크림 밝기</dd>
         <dt>B</dt><dd data-i18n="lgB">배경색</dd>
-        <dt>C</dt><dd data-i18n="lgC">타이머 표시</dd>
         <dt>U</dt><dd data-i18n="lgU">효과음 켜기/끄기</dd>
         <dt>F</dt><dd data-i18n="lgF">전체화면</dd>
       </dl>
@@ -249,7 +261,7 @@
 
   <h2 data-i18n="faqH2">자주 묻는 질문</h2>
   <div class="faq">
-    <h3 data-i18n="faqQ1">왜 하필 25분인가요?</h3>
+    <h3 data-i18n="faqQ1">왜 25분인가요?</h3>
     <p data-i18n="faqA1">프란체스코 시릴로가 처음 정한 기준이자, 대부분의 사람이 무리 없이 몰입을
     유지할 수 있는 경험적 최적값입니다. 더 길게 또는 짧게 쓰고 싶다면 업데이트를 기다려주세요 :)</p>
 
@@ -315,7 +327,7 @@ var I18N = {
     tips3: "5분 휴식은 진짜로 쉬세요 — 다른 화면을 보는 대신 스트레칭이나 물 마시기를 추천합니다",
     tips4: "세션이 끝났는데 흐름이 끊기기 아쉬우면, 그대로 이어가도 괜찮습니다. 타이머는 도구일 뿐 규칙이 아닙니다",
     faqH2: "자주 묻는 질문",
-    faqQ1: "왜 하필 25분인가요?",
+    faqQ1: "왜 25분인가요?",
     faqA1: "프란체스코 시릴로가 처음 정한 기준이자, 대부분의 사람이 무리 없이 몰입을 유지할 수 있는 경험적 최적값입니다. 더 길게 또는 짧게 쓰고 싶다면 업데이트를 기다려주세요 :)",
     faqQ2: "타임랩스 영상은 어디에 저장되나요?",
     faqA2: "영상은 사용자 기기로 바로 다운로드되고, Pomo Cam 서버로 전송되지 않습니다. 영상을 보관하거나 열람하지 않으니 걱정 마세요!",
@@ -327,7 +339,7 @@ var I18N = {
     privacyLink: "개인정보처리방침",
     lgSpace: "재생 / 일시정지", lgR: "처음으로", lgT: "녹화 시작/정지", lgE: "영상으로 저장",
     lgV: "카메라 켜기/끄기", lgN: "카메라 전환", lgM: "좌우 반전", lgS: "스크림 밝기",
-    lgB: "배경색", lgC: "타이머 표시", lgU: "효과음 켜기/끄기", lgF: "전체화면",
+    lgB: "배경색", lgU: "효과음 켜기/끄기", lgF: "전체화면",
     ariaControls: "컨트롤", ariaAd: "광고", ariaRec: "녹화 중", ariaHelp: "단축키 안내", adClose: "숨기기",
     taskPlaceholder: "무엇에 집중할까요?",
     closeBtn: "닫기",
@@ -402,7 +414,7 @@ var I18N = {
     privacyLink: "Privacy Policy",
     lgSpace: "Play / pause", lgR: "Restart", lgT: "Start/stop recording", lgE: "Save video",
     lgV: "Camera on/off", lgN: "Switch camera", lgM: "Mirror", lgS: "Scrim brightness",
-    lgB: "Background color", lgC: "Toggle timer", lgU: "Sound on/off", lgF: "Fullscreen",
+    lgB: "Background color", lgU: "Sound on/off", lgF: "Fullscreen",
     ariaControls: "Controls", ariaAd: "Advertisement", ariaRec: "Recording", ariaHelp: "Keyboard shortcuts", adClose: "Dismiss",
     taskPlaceholder: "What are you focusing on?",
     closeBtn: "Close",
@@ -568,7 +580,7 @@ function track(text, x, y, tr){
   }
 }
 
-var t = 0, going = false, last = 0, speed = 1, showCd = true;
+var t = 0, going = false, last = 0, speed = 1;
 var stream = null, camOn = false, mirror = false, cams = [], camIdx = 0;
 
 function drawCamera(){
@@ -638,7 +650,7 @@ function draw(){
     ctx.fillStyle = rgb(pal.txtFar, pal.txtNear, w);
     track(SEGS[i].name, 0, 0, fs*0.035);
 
-    if (showCd && SEGS[i].timer){
+    if (SEGS[i].timer){
       var op = Math.max(0, Math.min(1, (w-0.55)/0.30));
       if (op > 0.01){
         ctx.globalAlpha = op;
@@ -656,7 +668,7 @@ function draw(){
 var runB = document.getElementById("run"), rstB = document.getElementById("rst"),
     camB = document.getElementById("cam"), mirB = document.getElementById("mir"),
     scrB = document.getElementById("scr"), bgB = document.getElementById("bg"),
-    cdB = document.getElementById("cd"), sndB = document.getElementById("snd"),
+    sndB = document.getElementById("snd"),
     fsB = document.getElementById("fs"), ui = document.getElementById("ui"),
     msg = document.getElementById("msg"),
     recB = document.getElementById("rec"), savB = document.getElementById("sav"),
@@ -713,7 +725,6 @@ function toggleLang(){
 
 var soundOn = true;
 try { soundOn = localStorage.getItem("pomocam_sound_off") !== "1"; } catch(e){}
-sndB.textContent = "SOUND: " + (soundOn ? "ON" : "OFF");
 sndB.classList.toggle("off", !soundOn);
 
 var SOUND_LEAD = 0.4;
@@ -736,7 +747,6 @@ function playChime(){
 
 function toggleSound(){
   soundOn = !soundOn;
-  sndB.textContent = "SOUND: " + (soundOn ? "ON" : "OFF");
   sndB.classList.toggle("off", !soundOn);
   try { localStorage.setItem("pomocam_sound_off", soundOn ? "0" : "1"); } catch(e){}
 }
@@ -1002,7 +1012,6 @@ function cycleBg(){
   document.body.style.background = BGS[bgi][1];
   document.body.classList.toggle("theme-blue", BGS[bgi][0] === "BLUE");
 }
-function toggleCd(){ showCd = !showCd; cdB.textContent = "COUNTDOWN: " + (showCd?"ON":"OFF"); }
 function fullscreen(){
   var el = document.documentElement;
   var fsEl = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
@@ -1028,7 +1037,7 @@ function fullscreen(){
 
 runB.onclick = toggle; rstB.onclick = reset; camB.onclick = toggleCam;
 mirB.onclick = toggleMirror; scrB.onclick = cycleScrim; bgB.onclick = cycleBg;
-cdB.onclick = toggleCd; sndB.onclick = toggleSound; fsB.onclick = fullscreen;
+sndB.onclick = toggleSound; fsB.onclick = fullscreen;
 langB.onclick = toggleLang;
 recB.onclick = toggleRec; savB.onclick = exportVideo; clrB.onclick = clearFrames;
 helpB.onclick = function(e){ e.stopPropagation(); legend.classList.toggle("show"); };
@@ -1046,7 +1055,6 @@ document.addEventListener("keydown", function(e){
   else if (k === "m") toggleMirror();
   else if (k === "s") cycleScrim();
   else if (k === "b") cycleBg();
-  else if (k === "c") toggleCd();
   else if (k === "u") toggleSound();
   else if (k === "f") fullscreen();
   else if (k === "t") toggleRec();
